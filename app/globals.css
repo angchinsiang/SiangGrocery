@@ -45,6 +45,11 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --font-itim: var(--font-itim);
+  --font-hennypenny: var(--font-hennypenny);
+  --color-theme-start: #fdfffd;
+  --color-theme-end: #f0ffef;
 }
 
 :root {
@@ -89,7 +94,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0.00 0);
+  --primary: oklch(0.87 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -126,4 +131,21 @@
   html {
     @apply font-sans;
   }
+
+  div {
+    @apply h-auto;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
+
+@layer components {
+  .bg-theme {
+    @apply bg-gradient-to-r from-theme-start to-theme-end;
+  }
+}
+
+
