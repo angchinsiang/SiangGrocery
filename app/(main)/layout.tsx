@@ -4,7 +4,7 @@ import "../globals.css";
 import NavBar from "./NavBar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import Footer from "./Footer";
+import Footer from "../Components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 

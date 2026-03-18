@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import dummyImg from "@/public/DummyImg.jpg";
-import ProductCard from "./ProductCard";
+import ProductCard from "../Components/ProductCard";
 
 const DiscountSection = () => {
   const products = [

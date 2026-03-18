@@ -5,7 +5,7 @@ import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa6";
 
 const Footer = () => {
   return (
-    <div className="w-full px-[5%] py-[2%] bg-theme">
+    <div className="w-full px-[5%] py-[2%] bg-theme pt-40">
       <div className="grid grid-cols-2 w-full ">
         <div className="text-2xl font-semibold">Siang Grocery</div>
         <div className="flex justify-around">

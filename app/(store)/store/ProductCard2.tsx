@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import Image, { StaticImageData } from "next/image";
 import { GoHeart } from "react-icons/go";
 import { MdOutlineShoppingCart } from "react-icons/md";
+import PriceTag from "../../Components/PriceTag";
 
 const ProductCard2 = ({
   image,
@@ -24,19 +25,15 @@ const ProductCard2 = ({
     // 3. Added rounded-xl and p-4 so it looks like a real card.
     <div className="ring-2 ring-gray-200 w-full relative rounded-xl p-4 bg-white">
       <div className="mb-4">
-        <Image src={image} alt={alt} width={200} height={200} className="w-fit"/>
+        <Image
+          src={image}
+          alt={alt}
+          width={200}
+          height={200}
+          className="w-fit"
+        />
       </div>
-
-      <div>
-        <p className="line-through text-gray-400 font-semibold mr-2">
-          ${oriPrice}
-        </p>
-        <p className="text-red-600 font-bold text-xl">
-          ${price}{" "}
-          <span className="text-sm font-normal text-gray-600">/ {unit}</span>
-        </p>
-      </div>
-
+      <PriceTag oriPrice={oriPrice} price={price} unit={unit} />
       {/* Fixed: Added justify-between and w-full to push the cart to the right! */}
       <div className="flex items-end justify-between w-full mt-4">
         <div className="text-muted-foreground font-medium text-sm">
@@ -46,7 +43,6 @@ const ProductCard2 = ({
           <MdOutlineShoppingCart className="text-black size-6" />
         </Button>
       </div>
-
       {/* The Heart is now safely trapped 5px from the top-right edge of the card! */}
       <div className="absolute top-5 right-5">
         <Button

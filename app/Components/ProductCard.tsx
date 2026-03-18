@@ -20,7 +20,7 @@ const ProductCard = ({
   return (
     <Card className="w-56 relative">
       <CardContent className="">
-        <Image src={imgURL} alt="A product card" width={300} height={300} />
+        <Image src={imgURL} alt="A product card" className="w-full h-auto" />
         <div>
           <p className="line-through text-black font-semibold">${oriPrice}</p>
           <p className="text-red-600 font-bold text-xl">
