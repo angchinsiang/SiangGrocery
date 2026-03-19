@@ -108,6 +108,7 @@ const page = () => {
         <div className="flex flex-col gap-10">
           {orders.map((order) => (
             <OrderItemGroup
+              status="Delivered"
               key={order.order_id}
               totalAmount={order.items.reduce((acc, item) => {
                 return acc + item.price * item.quantity;
