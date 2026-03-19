@@ -4,7 +4,7 @@ import { GoHeart } from "react-icons/go";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import PriceTag from "../../Components/PriceTag";
 
-const ProductCard2 = ({
+const StoreProductCard = ({
   image,
   alt,
   price,
@@ -23,7 +23,7 @@ const ProductCard2 = ({
     // 1. ADDED 'relative' to trap the Heart button inside!
     // 2. Swapped w-fit to w-full so it fills your Grid cells perfectly.
     // 3. Added rounded-xl and p-4 so it looks like a real card.
-    <div className="ring-2 ring-gray-200 w-full relative rounded-xl p-4 bg-white">
+    <div className="ring-2 ring-gray-200 w-fit relative rounded-xl p-4 bg-white hover:shadow-xl transition-shadow duration-300 cursor-pointer">
       <div className="mb-4">
         <Image
           src={image}
@@ -56,4 +56,4 @@ const ProductCard2 = ({
   );
 };
 
-export default ProductCard2;
+export default StoreProductCard;

@@ -1,18 +1,19 @@
 import Comments from "./Comments";
 import DescriptionSection from "./DescriptionSection";
-import MoreSection from "./MoreSection";
+import MoreSection from "../../../../Components/MoreSection";
 import ProductImageAndPrice from "./ProductImage&Price";
+import BodyTemplate from "@/app/Components/BodyTemplate";
 
 const page = () => {
   return (
-    <div className="flex flex-col gap-5">
+    <BodyTemplate className="pt-1">
       <ProductImageAndPrice />
-      <div className="w-[50%] flex flex-col gap-10 px-3">
+      <div className="w-[50%] flex flex-col gap-10">
         <DescriptionSection />
         <Comments />
       </div>
       <MoreSection />
-    </div>
+    </BodyTemplate>
   );
 };
 

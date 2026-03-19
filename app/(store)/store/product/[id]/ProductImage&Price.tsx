@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const ProductImageAndPrice = () => {
   return (
-    <div className="flex px-2">
+    <div className="flex">
       <div className="w-[50%] aspect-video [&_div]:size-full">
         <Carousel className="size-full ">
           <CarouselContent>

@@ -1,21 +1,24 @@
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import React from "react";
-import { IoFilterSharp } from "react-icons/io5";
+import { IconType } from "react-icons";
 
 const BodyTemplate = ({
   children,
   header,
+  ButtonIcon,
+  className,
 }: {
   children: React.ReactNode;
-  header: string;
+  header?: string;
+  ButtonIcon?: React.ReactNode;
+  className?: string;
 }) => {
   return (
-    <div className="flex flex-col gap-10 px-10 py-6">
+    <div className={cn("flex flex-col gap-5 px-15 pt-5 pb-10", className)}>
       <div className="flex justify-between">
-        <p className="text-2xl font-semibold">{header}</p>
-        <Button variant="ghost">
-          <IoFilterSharp className="size-5" />
-        </Button>
+        {header && <p className="text-3xl font-bold">{header}</p>}
+        {ButtonIcon && ButtonIcon}
       </div>
       {children}
     </div>

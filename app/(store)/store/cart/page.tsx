@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui/button";
+import BodySection from "@/app/Components/BodyTemplate";
+import dummyImage from "@/public/DummyImg.jpg";
 import { IoFilterSharp } from "react-icons/io5";
 import CartItem from "./CartItem";
-import dummyImage from "@/public/DummyImg.jpg";
-import CheckOutStripe from "./CheckOutStripe";
-import BodySection from "@/app/Components/BodyTemplate";
 
 const cartItems = [
   {
@@ -32,7 +30,7 @@ const cartItems = [
 
 const page = () => {
   return (
-    <BodySection header="Shopping Cart">
+    <BodySection header="Shopping Cart" ButtonIcon={<IoFilterSharp className="size-5"/>}>
       <div className="flex flex-col gap-10">
         {cartItems.map((item) => (
           <CartItem key={item.id} {...item} />
