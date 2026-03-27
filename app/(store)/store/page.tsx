@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CustomCarousel } from "./Carousel";
 import ContentSection from "./ContentSection";
 import ServiceButtons from "./ServiceButtons";
-import GoUp from "@/app/(main)/GoUp";
+import GoUp from "@/app/Components/GoUp";
 
 const Page = () => {
   return (

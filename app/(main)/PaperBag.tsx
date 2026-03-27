@@ -1,9 +1,14 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import paperBagImg from "@/public/Paper Bag.png";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const PaperBag = () => {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col items-center gap-3 ">
       <Image
@@ -16,6 +21,7 @@ const PaperBag = () => {
       <Button
         size="lg"
         className="shadow-md bg-green-500 hover:bg-green-600 active:bg-[#364C35] font-bold px-6 py-5"
+        onClick={() => router.push("/store")}
       >
         Shop Now
       </Button>

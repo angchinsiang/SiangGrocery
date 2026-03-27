@@ -1,0 +1,382 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id
+  name      String
+  email     String   @unique
+  address   String[]
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  carts         Cart[]
+  wishlists     Wishlist[]
+  order_tickets Order_Ticket[]
+  comments      Comment[]
+  addresses     Address[]
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
+  isDefault  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String   @id
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastSeen  DateTime @default(now())
+
+  user      User        @relation(fields: [user_id], references: [id])
+  cartItems Cart_Item[]
+}
+
+model Cart_Item {
+  id        String           @id
+  cart_id   String
+  SKU       String
+  quantity  Int              @default(1)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  status    Cart_Item_Status @default(ACTIVE)
+
+  cart    Cart    @relation(fields: [cart_id], references: [id])
+  grocery Grocery @relation(fields: [SKU], references: [id])
+
+  @@unique([cart_id, SKU])
+}
+
+model Grocery {
+  id          String         @id
+  name        String
+  description String
+  image       String
+  category    Category
+  form        Form
+  MoU         MoU
+  isPromotion Boolean        @default(false)
+  shelfLife   Int
+  status      Grocery_Status @default(ACTIVE)
+  size        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  cartItems      Cart_Item[]
+  wishlistItems  Wishlist_Item[]
+  listedProducts Listed_Product[]
+  comments       Comment[]
+  groceryMedias  Grocery_Media[]
+}
+
+model Wishlist {
+  id        String   @id
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User            @relation(fields: [user_id], references: [id])
+  wishlistItems Wishlist_Item[]
+}
+
+model Wishlist_Item {
+  id          String   @id
+  wishlist_id String
+  SKU         String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wishlist Wishlist @relation(fields: [wishlist_id], references: [id])
+  grocery  Grocery  @relation(fields: [SKU], references: [id])
+}
+
+model Coupon {
+  id        String        @id
+  amount    Float
+  status    Coupon_Status @default(ACTIVE)
+  type      Coupon_Type
+  expiry    DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  order_tickets Order_Ticket[]
+}
+
+enum Coupon_Type {
+  SHIPPING
+  DISCOUNT
+}
+
+enum Coupon_Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Order_Ticket {
+  id             String          @id
+  user_id        String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  completed_At   DateTime?
+  status         Purchase_Status @default(PENDING)
+  total_amount   Float
+  payment_method Payment_Method
+
+  groceryOrders Grocery_Order[]
+  coupons       Coupon[]
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum Payment_Method {
+  COD
+  CARD
+  FPX
+  EWALLET
+}
+
+model Grocery_Order {
+  id        String   @id
+  ot_id     String
+  lp_id     String
+  quantity  Int      @default(1)
+  price     Float
+  remark    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order_ticket   Order_Ticket   @relation(fields: [ot_id], references: [id])
+  listed_product Listed_Product @relation(fields: [lp_id], references: [id])
+
+  @@unique([ot_id, lp_id])
+}
+
+model Listed_Product {
+  id              String   @id
+  SKU             String
+  batch_id        String
+  total_qty       Int
+  expiration_date DateTime
+  reserved_qty    Int      @default(0)
+  locked_in_qty   Int      @default(0)
+  isDisplay       Boolean  @default(true)
+  price           Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  groceryOrders Grocery_Order[]
+
+  grocery     Grocery     @relation(fields: [SKU], references: [id])
+  supply_item Supply_Item @relation(fields: [batch_id], references: [id])
+
+  @@unique([SKU, batch_id])
+}
+
+model Supply_Item {
+  id          String         @id
+  name        String
+  category    Category
+  form        Form
+  MoU         MoU
+  description String
+  status      Grocery_Status @default(ACTIVE)
+  isDisplay   Boolean        @default(true)
+  isAuto      Boolean        @default(false)
+  size        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  listedProducts Listed_Product[]
+}
+
+model Order_History {
+  id               String          @id
+  batch_id         String
+  supplier_id      String
+  quantity         Int
+  unit_cost        Float
+  isPaid           Boolean         @default(false)
+  status           Purchase_Status @default(PENDING)
+  payment_deadline DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Supplier {
+  id                String          @id
+  name              String
+  email             String          @unique
+  phone             String?
+  address           String?
+  halal_certified   Boolean         @default(false)
+  organic_certified Boolean         @default(false)
+  payment_term      Int             @default(90)
+  min_order         Float           @default(1000)
+  status            Supplier_Status @default(ACTIVE)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Comment {
+  id        String         @id @default(uuid())
+  user_id   String
+  SKU       String
+  comment   String
+  rating    Int
+  media     String[]       @default([])
+  isEdited  Boolean        @default(false)
+  helpful   Int            @default(0)
+  status    Comment_Status @default(APPROVED)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user    User    @relation(fields: [user_id], references: [id])
+  grocery Grocery @relation(fields: [SKU], references: [id])
+}
+
+model Logs {
+  id        String     @id @default(uuid())
+  admin_id  String
+  action    Log_Action
+  details   String
+  createdAt DateTime   @default(now())
+
+  admin Admin @relation(fields: [admin_id], references: [id])
+}
+
+model Admin {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  role      Admin_Role @default(ADMIN)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  logs      Logs[]
+}
+
+model MediaAsset {
+  id            String          @id
+  url           String
+  category      Media_Category
+  name          String
+  altText       String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  groceryMedias Grocery_Media[]
+}
+
+model Grocery_Media {
+  SKU       String
+  media_id  String
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  grocery Grocery    @relation(fields: [SKU], references: [id])
+  media   MediaAsset @relation(fields: [media_id], references: [id])
+
+  @@id([SKU, media_id])
+}
+
+enum Admin_Role {
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Log_Action {
+  MANUAL
+  SYSTEM
+}
+
+enum Comment_Status {
+  APPROVED
+  HIDDEN
+}
+
+enum Supplier_Status {
+  ACTIVE
+  INACTIVE
+  ON_HOLD
+  BLACKLISTED
+}
+
+enum Category {
+  VEGETABLE
+  FRUIT
+  MEAT
+  DAIRY
+  OTHER
+
+  @@map("Category")
+}
+
+enum Media_Category {
+  VEGETABLE
+  FRUIT
+  MEAT
+  DAIRY
+  OTHER
+  MARKETING_BANNER
+
+  @@map("Media_Category")
+}
+
+enum Form {
+  FRESH
+  FROZEN
+  DRY
+  LIQUID
+  OTHER
+
+  @@map("Form")
+}
+
+enum Purchase_Status {
+  PENDING
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum Cart_Item_Status {
+  ACTIVE
+  INACTIVE
+  CONVERTED
+}
+
+enum Grocery_Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum MoU {
+  KG
+  G
+  L
+  ML
+  PCS
+}

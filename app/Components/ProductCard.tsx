@@ -40,7 +40,7 @@ const ProductCard = ({
       </CardContent>
       <div className="absolute top-5 right-5">
         <Button variant="link" className="rounded-full p-0 h-8 aspect-square">
-          <GoHeart className="size-6" />
+          <GoHeart className="size-6 " />
         </Button>
       </div>
     </Card>

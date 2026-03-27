@@ -5,7 +5,7 @@ import RecepientDetailStripe from "./RecepientDetailStripe";
 import dummyImage from "@/public/DummyImg.jpg";
 import OrderItem from "../OrderItem";
 import OrderItemGroup from "../OrderItemGroup";
-import GoUp from "@/app/(main)/GoUp";
+import GoUp from "@/app/Components/GoUp";
 
 const page = () => {
   const receipient = "Lydia";

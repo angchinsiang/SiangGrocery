@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import dummyImage from "@/public/DummyImg.jpg";
 import OrderItem from "./OrderItem";
 import OrderItemGroup from "./OrderItemGroup";
-import GoUp from "@/app/(main)/GoUp";
+import GoUp from "@/app/Components/GoUp";
 
 const orders = [
   {
