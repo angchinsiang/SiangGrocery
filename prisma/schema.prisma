@@ -281,11 +281,18 @@ model MediaAsset {
   id            String          @id
   url           String
   category      Media_Category
+  type          Media_Type
   name          String
   altText       String?
+  status        Media_Status    @default(DRAFT)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   groceryMedias Grocery_Media[]
+}
+
+enum Media_Status {
+  ACTIVE
+  DRAFT
 }
 
 model Grocery_Media {
@@ -343,6 +350,13 @@ enum Media_Category {
   MARKETING_BANNER
 
   @@map("Media_Category")
+}
+
+enum Media_Type {
+  IMAGE
+  VIDEO
+
+  @@map("Media_Type")
 }
 
 enum Form {
