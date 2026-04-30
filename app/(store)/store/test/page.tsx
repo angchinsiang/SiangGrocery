@@ -1,6 +1,6 @@
 "use client";
 
-import { uploadMediaAsset } from "@/app/actions/media";
+import { uploadMediaAsset } from "@/app/actions/uploadMedia";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Field,
@@ -26,8 +26,9 @@ import { CheckCircle2Icon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import brocolli from "@/public/Fresh Milk.png";
-import { MediaFormData, mediaSchema } from "@/lib/imgUploadSchema";
+import { MediaFormData, mediaSchema } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const TestPage = () => {
   const {
@@ -260,7 +261,9 @@ const TestPage = () => {
                 }
               }}
               onUploadError={(error) => {
-                console.log(error);
+                toast("Upload Failed", {
+                  description: error.message,
+                });
               }}
               appearance={{
                 button:

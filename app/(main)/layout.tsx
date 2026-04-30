@@ -5,6 +5,7 @@ import NavBar from "./NavBar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import Footer from "../Components/Footer";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -40,16 +41,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const queryClient = new QueryClient();
   return (
     <html lang="en" className={inter.className}>
       <body
         className={`${itim.variable} ${inter.variable} ${hennyPenny.variable} antialiased`}
       >
-        <ClerkProvider>
-          <NavBar></NavBar>
-          {children}
-          <Footer />
-        </ClerkProvider>
+        <QueryClientProvider client={queryClient}>
+          <ClerkProvider>
+            <NavBar></NavBar>
+            {children}
+            <Footer />
+          </ClerkProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import NavBar from "./NavBar";
 import Footer from "@/app/Components/Footer";
+import QueryClientProvider from "./QueryClientProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -46,11 +47,13 @@ export default function RootLayout({
       <body
         className={`${itim.variable} ${inter.variable} ${hennyPenny.variable} antialiased`}
       >
-        <ClerkProvider>
-          <NavBar />
-          <main >{children}</main>
-          <Footer />
-        </ClerkProvider>
+        <QueryClientProvider>
+          <ClerkProvider>
+            <NavBar />
+            <main>{children}</main>
+            <Footer />
+          </ClerkProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );

@@ -8,8 +8,8 @@ const f = createUploadthing();
 
 export const ourFileRouter = {
   groceryMedia: f({
-    image: { maxFileSize: "8MB", maxFileCount: 10 },
-    video: { maxFileSize: "128MB", maxFileCount: 3 },
+    image: { maxFileSize: "8MB", maxFileCount: 4 },
+    video: { maxFileSize: "128MB", maxFileCount: 1 },
   })
     .middleware(async ({ req }) => {
       const user = await auth();
@@ -22,6 +22,7 @@ export const ourFileRouter = {
       return { userId: user.userId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
+      const fileType = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
       const fileKey = file.ufsUrl.split("/f/")[1];
       try {
         await prisma.mediaAsset.create({
@@ -30,7 +31,7 @@ export const ourFileRouter = {
             url: file.ufsUrl,
             name: file.name,
             category: "OTHER",
-            type: "IMAGE",
+            type: fileType,
             altText: "This is a draft.",
             status: "DRAFT",
           },

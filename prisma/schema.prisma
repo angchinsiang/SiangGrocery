@@ -70,25 +70,39 @@ model Cart_Item {
 }
 
 model Grocery {
-  id          String         @id
+  id          String   @id
   name        String
   description String
   image       String
   category    Category
   form        Form
   MoU         MoU
-  isPromotion Boolean        @default(false)
-  shelfLife   Int
-  status      Grocery_Status @default(ACTIVE)
+  isPromotion Boolean  @default(false)
+  expiryDate  DateTime
+  status      Boolean  @default(true)
   size        String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   cartItems      Cart_Item[]
   wishlistItems  Wishlist_Item[]
   listedProducts Listed_Product[]
   comments       Comment[]
   groceryMedias  Grocery_Media[]
+}
+
+model Grocery_Media {
+  SKU       String
+  media_id  String
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  grocery Grocery    @relation(fields: [SKU], references: [id])
+  media   MediaAsset @relation(fields: [media_id], references: [id])
+
+  @@id([SKU, media_id])
 }
 
 model Wishlist {
@@ -195,18 +209,18 @@ model Listed_Product {
 }
 
 model Supply_Item {
-  id          String         @id
+  id          String   @id
   name        String
   category    Category
   form        Form
   MoU         MoU
   description String
-  status      Grocery_Status @default(ACTIVE)
-  isDisplay   Boolean        @default(true)
-  isAuto      Boolean        @default(false)
+  status      Boolean  @default(true)
+  isDisplay   Boolean  @default(true)
+  isAuto      Boolean  @default(false)
   size        String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   listedProducts Listed_Product[]
 }
@@ -293,20 +307,6 @@ model MediaAsset {
 enum Media_Status {
   ACTIVE
   DRAFT
-}
-
-model Grocery_Media {
-  SKU       String
-  media_id  String
-  isPrimary Boolean  @default(false)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  grocery Grocery    @relation(fields: [SKU], references: [id])
-  media   MediaAsset @relation(fields: [media_id], references: [id])
-
-  @@id([SKU, media_id])
 }
 
 enum Admin_Role {
