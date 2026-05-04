@@ -5,6 +5,7 @@ import Image, { StaticImageData } from "next/image";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import PriceTag from "../../Components/PriceTag";
 import WishlistButton from "./WishlistButton";
+import CartButton from "./CartButton";
 
 const StoreProductCard = async ({
   SKU,
@@ -31,7 +32,6 @@ const StoreProductCard = async ({
       wishlistItems: { select: { wishlist_id: true }, where: { SKU: SKU } },
     },
   });
-  console.log(isInWishlist);
 
   return (
     // 1. ADDED 'relative' to trap the Heart button inside!
@@ -53,9 +53,7 @@ const StoreProductCard = async ({
         <div className="text-muted-foreground font-medium text-sm">
           From {country}
         </div>
-        <Button className="aspect-square h-10 rounded-full p-0 bg-[#C9F2BD] hover:bg-[#b0dfa3]">
-          <MdOutlineShoppingCart className="text-black size-6" />
-        </Button>
+        <CartButton SKU={SKU} />
       </div>
       {/* The Heart is now safely trapped 5px from the top-right edge of the card! */}
       <div className="absolute top-5 right-5">

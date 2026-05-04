@@ -44,7 +44,7 @@ model Address {
 }
 
 model Cart {
-  id        String   @id
+  id        String   @id @default(uuid())
   user_id   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,10 +52,12 @@ model Cart {
 
   user      User        @relation(fields: [user_id], references: [id])
   cartItems Cart_Item[]
+
+  @@unique([user_id])
 }
 
 model Cart_Item {
-  id        String           @id
+  id        String           @id @default(uuid())
   cart_id   String
   SKU       String
   quantity  Int              @default(1)
