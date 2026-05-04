@@ -34,7 +34,7 @@ model Address {
   city       String
   state      String
   postalCode String
-  country    String
+  country    Country  @default(Australia)
   isDefault  Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -80,7 +80,9 @@ model Grocery {
   isPromotion Boolean  @default(false)
   expiryDate  DateTime
   status      Boolean  @default(true)
+  country     Country  @default(Australia)
   size        String?
+  sold_qty    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -106,17 +108,19 @@ model Grocery_Media {
 }
 
 model Wishlist {
-  id        String   @id
+  id        String   @id @default(uuid())
   user_id   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user          User            @relation(fields: [user_id], references: [id])
   wishlistItems Wishlist_Item[]
+
+  @@unique([user_id])
 }
 
 model Wishlist_Item {
-  id          String   @id
+  id          String   @id @default(uuid())
   wishlist_id String
   SKU         String
   createdAt   DateTime @default(now())
@@ -124,6 +128,8 @@ model Wishlist_Item {
 
   wishlist Wishlist @relation(fields: [wishlist_id], references: [id])
   grocery  Grocery  @relation(fields: [SKU], references: [id])
+
+  @@unique([wishlist_id, SKU])
 }
 
 model Coupon {
@@ -196,7 +202,8 @@ model Listed_Product {
   reserved_qty    Int      @default(0)
   locked_in_qty   Int      @default(0)
   isDisplay       Boolean  @default(true)
-  price           Float
+  discount_price  Float
+  original_price  Float
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -219,6 +226,7 @@ model Supply_Item {
   isDisplay   Boolean  @default(true)
   isAuto      Boolean  @default(false)
   size        String?
+  country     Country  @default(Australia)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -250,6 +258,7 @@ model Supplier {
   payment_term      Int             @default(90)
   min_order         Float           @default(1000)
   status            Supplier_Status @default(ACTIVE)
+  country           Country         @default(Australia)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 }
@@ -393,4 +402,56 @@ enum MoU {
   L
   ML
   PCS
+}
+
+enum Country {
+  Argentina
+  Australia
+  Austria
+  Belgium
+  Brazil
+  Canada
+  Chile
+  China
+  Colombia
+  Denmark
+  Ecuador
+  Egypt
+  France
+  Germany
+  Greece
+  India
+  Indonesia
+  Ireland
+  Italy
+  Japan
+  Kenya
+  Malaysia
+  Mexico
+  Morocco
+  Netherlands
+  NewZealand
+  Nigeria
+  Norway
+  Pakistan
+  Peru
+  Philippines
+  Poland
+  Portugal
+  Russia
+  SaudiArabia
+  Singapore
+  SouthAfrica
+  SouthKorea
+  Spain
+  Sweden
+  Switzerland
+  Taiwan
+  Thailand
+  Turkey
+  UnitedArabEmirates
+  UnitedKingdom
+  UnitedStates
+  Uruguay
+  Vietnam
 }

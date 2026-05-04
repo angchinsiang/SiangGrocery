@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
+import prisma from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import Image, { StaticImageData } from "next/image";
-import { GoHeart } from "react-icons/go";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import PriceTag from "../../Components/PriceTag";
+import WishlistButton from "./WishlistButton";
 
-const StoreProductCard = ({
+const StoreProductCard = async ({
+  SKU,
   image,
   alt,
   price,
@@ -12,13 +15,24 @@ const StoreProductCard = ({
   oriPrice,
   country,
 }: {
-  image: StaticImageData;
+  SKU: string;
+  image: string | StaticImageData;
   alt: string;
   price: number;
   oriPrice: number;
   unit: string;
   country: string;
 }) => {
+  const session = await auth();
+
+  const isInWishlist = await prisma.wishlist.findFirst({
+    where: { user_id: session?.userId || undefined },
+    include: {
+      wishlistItems: { select: { wishlist_id: true }, where: { SKU: SKU } },
+    },
+  });
+  console.log(isInWishlist);
+
   return (
     // 1. ADDED 'relative' to trap the Heart button inside!
     // 2. Swapped w-fit to w-full so it fills your Grid cells perfectly.
@@ -45,12 +59,10 @@ const StoreProductCard = ({
       </div>
       {/* The Heart is now safely trapped 5px from the top-right edge of the card! */}
       <div className="absolute top-5 right-5">
-        <Button
-          variant="ghost"
-          className="rounded-full p-0 h-8 aspect-square hover:bg-red-50"
-        >
-          <GoHeart className="size-6 text-red-500" />
-        </Button>
+        <WishlistButton
+          isInWishlist={!!isInWishlist?.wishlistItems.length}
+          SKU={SKU}
+        />
       </div>
     </div>
   );

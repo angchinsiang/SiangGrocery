@@ -10,7 +10,7 @@ import {
 
 export function CustomCarousel() {
   return (
-    <Carousel className="w-[70%] h-full [&_div]:h-full">
+    <Carousel className="w-[70%] h-full [&_div]:h-full ">
       <CarouselContent className="">
         {Array.from({ length: 5 }).map((_, index) => (
           <CarouselItem key={index} className="">

@@ -17,7 +17,7 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 
 const NavBar = async () => {
   const sessionUser = await currentUser();
-  console.log("\n\n UserSession: ", sessionUser, "\n");
+  // console.log("\n\n UserSession: ", sessionUser, "\n");
   const image = sessionUser?.imageUrl || "https://github.com/shadcn.png";
 
   return (
