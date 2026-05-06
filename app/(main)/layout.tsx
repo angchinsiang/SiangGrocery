@@ -49,7 +49,7 @@ export default function RootLayout({
       >
         <QueryClientProvider client={queryClient}>
           <ClerkProvider>
-            <NavBar></NavBar>
+            <NavBar />
             {children}
             <Footer />
           </ClerkProvider>

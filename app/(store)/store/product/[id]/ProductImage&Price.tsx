@@ -1,18 +1,47 @@
-import React from "react";
+import PriceTag from "@/app/Components/PriceTag";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import PriceTag from "@/app/Components/PriceTag";
-import { Button } from "@/components/ui/button";
+import prisma from "@/lib/prisma";
 import Link from "next/link";
-import Description from "./Description";
-import { Card, CardContent } from "@/components/ui/card";
 
-const ProductImageAndPrice = () => {
+const ProductImageAndPrice = async ({
+  SKU,
+  name,
+  originalPrice: oriPrice,
+  discountPrice: price,
+  MoU,
+}: {
+  SKU: string;
+  name: string;
+  originalPrice: number;
+  discountPrice: number;
+  MoU: string;
+}) => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const totalUnitSold = await prisma.grocery_Order.aggregate({
+    _sum: { quantity: true },
+    where: {
+      listed_product: {
+        SKU: SKU,
+      },
+      order_ticket: { createdAt: { gte: thirtyDaysAgo }, status: "COMPLETED" },
+    },
+  });
+
+  const remainingUnits = await prisma.listed_Product.aggregate({
+    _sum: { total_qty: true },
+    where: { SKU: SKU, isDisplay: true },
+  });
+
   return (
     <div className="flex">
       <div className="w-[50%] aspect-video [&_div]:size-full">
@@ -38,15 +67,19 @@ const ProductImageAndPrice = () => {
         <div className="flex justify-between">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-0.5">
-              <p className="text-3xl font-normal">Fresh Milk</p>
+              <p className="text-3xl font-normal">{name}</p>
               <div className="flex items-center gap-2.5">
-                <span className="text-xs">100+ sold</span>
+                <span className="text-xs">
+                  {totalUnitSold._sum.quantity || 0} sold
+                </span>
                 <Separator orientation="vertical" className="bg-black" />
-                <span className="text-xs">5 left</span>
+                <span className="text-xs">
+                  {remainingUnits._sum.total_qty || 0} left
+                </span>
               </div>
             </div>
             <div>
-              <PriceTag oriPrice={10.99} price={8.99} unit="Kg" />
+              <PriceTag oriPrice={oriPrice} price={price} unit={MoU} />
             </div>
           </div>
           <div className="flex flex-col gap-1">
@@ -66,16 +99,28 @@ const ProductImageAndPrice = () => {
         </div>
         <Separator className="my-3" />
         <div className="flex flex-col gap-3 px-20">
+          {(remainingUnits?._sum.total_qty || 0) > 0 ? (
+            <>
+              <Button
+                variant="destructive"
+                className="py-4.5 font-semibold text-base shadow-lg/5 border-red-200 "
+              >
+                Check Out
+              </Button>
+              <Button className=" bg-blue-600 text-white hover:bg-blue-700 py-4.5 text-base shadow-lg border-none ">
+                Add to Cart
+              </Button>
+            </>
+          ) : (
+            <div className="flex justify-center p-1 font-bold text-xl text-red-600 ">
+              Out of Stock
+            </div>
+          )}
           <Button
-            variant="destructive"
-            className="py-4.5 font-semibold text-base shadow-lg/5 border-red-200 "
+            variant="link"
+            asChild
+            className=" w-fit self-center underline hover:font-bold"
           >
-            Check Out
-          </Button>
-          <Button className=" bg-blue-600 text-white hover:bg-blue-700 py-4.5 text-base shadow-lg border-none ">
-            Add to Cart
-          </Button>
-          <Button variant="link" asChild className="underline hover:font-bold">
             <Link href="/store/chat">Chat with Seller</Link>
           </Button>
         </div>

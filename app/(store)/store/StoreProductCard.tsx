@@ -1,11 +1,10 @@
-import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import Image, { StaticImageData } from "next/image";
-import { MdOutlineShoppingCart } from "react-icons/md";
+import Link from "next/link";
 import PriceTag from "../../Components/PriceTag";
-import WishlistButton from "./WishlistButton";
 import CartButton from "./CartButton";
+import WishlistButton from "../../Components/WishlistButton";
 
 const StoreProductCard = async ({
   SKU,
@@ -37,7 +36,10 @@ const StoreProductCard = async ({
     // 1. ADDED 'relative' to trap the Heart button inside!
     // 2. Swapped w-fit to w-full so it fills your Grid cells perfectly.
     // 3. Added rounded-xl and p-4 so it looks like a real card.
-    <div className="ring-2 ring-gray-200 w-fit relative rounded-xl p-4 bg-white hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+    <Link
+      href={`/store/product/${SKU}`}
+      className="ring-2 ring-gray-200 w-fit relative rounded-xl p-4 bg-white hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+    >
       <div className="mb-4">
         <Image
           src={image}
@@ -62,7 +64,7 @@ const StoreProductCard = async ({
           SKU={SKU}
         />
       </div>
-    </div>
+    </Link>
   );
 };
 

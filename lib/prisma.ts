@@ -27,6 +27,7 @@ const prismaClientSingleton = () => {
             Comment: "CMT_",
             Logs: "LOGS_",
             Admin: "ADM_",
+            Comment_Media: "CMTM_",
           };
 
           const prefix = modelPrefixMap[model as string];

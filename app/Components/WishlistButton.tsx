@@ -8,9 +8,11 @@ import { useOptimistic, useTransition } from "react";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 
 const WishlistButton = ({
+  className,
   isInWishlist,
   SKU,
 }: {
+  className?: string;
   isInWishlist: boolean;
   SKU: string;
 }) => {
@@ -42,9 +44,13 @@ const WishlistButton = ({
       className="rounded-full p-0 h-8 aspect-square hover:bg-red-50"
     >
       {optimisticWishlist ? (
-        <GoHeartFill className="size-6 text-red-500" />
+        <GoHeartFill
+          className={(className ? className : " size-6") + " text-red-500"}
+        />
       ) : (
-        <GoHeart className="size-6 text-red-500" />
+        <GoHeart
+          className={(className ? className : " size-6") + " text-red-500"}
+        />
       )}
     </Button>
   );
