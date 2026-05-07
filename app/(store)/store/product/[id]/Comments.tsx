@@ -1,25 +1,17 @@
-import { Button } from "@/components/ui/button";
-import React from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BiLike } from "react-icons/bi";
-import { currentUser } from "@clerk/nextjs/server";
-import { Comment, Prisma } from "@/lib/generated/prisma";
+import { Button } from "@/components/ui/button";
+import { Prisma } from "@/lib/generated/prisma";
 import prisma from "@/lib/prisma";
+import { currentUser } from "@clerk/nextjs/server";
+import LikeCommentButton from "./LikeCommentButton";
 
-type CommentWithUser = Prisma.CommentGetPayload<{
+export type CommentWithUser = Prisma.CommentGetPayload<{
   include: {
     user: {
-      select: { name: true };
+      select: { name: true; id: true };
     };
+    _count: { select: { commentLikes: true } };
+    commentLikes: true;
   };
 }>;
 
@@ -70,29 +62,27 @@ const Comments = async ({
         <div className="flex flex-col gap-2" key={c.id}>
           <div className="flex gap-1.5">
             <Avatar>
-              <AvatarImage
-                src={userImage}
-                alt={c.user.name}
-                className="grayscale"
-              />
+              <AvatarImage src={userImage} alt={c.user.name} />
               <AvatarFallback>{c.user.name}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex flex-col">
-                <p className="font-medium text-sm">User Name</p>
-                <p className="text-xs text-muted-foreground">2025-10-10</p>
+                <p className="font-medium text-sm">{c.user.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {c.createdAt.toDateString()}
+                </p>
               </div>
             </div>
             <p className="text-xs">{"⭐".repeat(c.rating)}</p>
           </div>
           <div className="flex flex-col">
-            <p className="text-sm">
-              {c.comment}
-            </p>
+            <p className="text-sm">{c.comment}</p>
             <div className="flex justify-end">
-              <Button variant="link">
-                Likes <BiLike />
-              </Button>
+              <LikeCommentButton
+                commentLike={c.commentLikes}
+                likeCount={c._count.commentLikes}
+                commentId={c.id}
+              />
             </div>
           </div>
         </div>

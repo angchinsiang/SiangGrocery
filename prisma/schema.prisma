@@ -26,6 +26,7 @@ model User {
   order_tickets Order_Ticket[]
   comments      Comment[]
   addresses     Address[]
+  commentLikes  CommentLike[]
 }
 
 model Address {
@@ -271,7 +272,6 @@ model Comment {
   SKU       String
   comment   String
   rating    Int
-  media     String
   isEdited  Boolean        @default(false)
   helpful   Int            @default(0)
   status    Comment_Status @default(APPROVED)
@@ -279,6 +279,7 @@ model Comment {
   updatedAt DateTime       @updatedAt
 
   commentMedias Comment_Media[]
+  commentLikes  CommentLike[]
   user          User            @relation(fields: [user_id], references: [id])
   grocery       Grocery         @relation(fields: [SKU], references: [id])
 }
@@ -295,6 +296,18 @@ model Comment_Media {
   comment Comment @relation(fields: [comment_id], references: [id])
 
   @@unique([comment_id, url])
+}
+
+model CommentLike {
+  user_id    String
+  comment_id String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user    User    @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  comment Comment @relation(references: [id], fields: [comment_id], onDelete: Cascade)
+
+  @@id([user_id, comment_id])
 }
 
 model Logs {

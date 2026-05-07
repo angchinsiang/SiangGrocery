@@ -6,6 +6,7 @@ import BodyTemplate from "@/app/Components/BodyTemplate";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 export async function generateMetadata({
   params,
@@ -50,6 +51,8 @@ export async function generateMetadata({
 // console.log(`\n\n${JSON.stringify(grocery_media, null, 2)}\n\n`);
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id: SKU } = await params;
+  const session = await auth();
+
   const grocery = await prisma.grocery.findUnique({
     where: { id: SKU },
     include: {
@@ -57,7 +60,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
       comments: {
         include: {
           user: {
-            select: { name: true },
+            select: { name: true, id: true },
+          },
+          _count: { select: { commentLikes: true } },
+          commentLikes: {
+            where: {
+              user_id: session?.userId || "UNAUTHENTICATED_USER",
+            },
           },
         },
         take: 3,
@@ -84,7 +93,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           description={grocery.description}
           name={grocery.name}
         />
-        <Comments comments={grocery.comments} />
+        <Comments comments={grocery.comments} SKU={SKU} />
       </div>
       <MoreSection />
     </BodyTemplate>
