@@ -10,6 +10,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
+import AddToWishlist from "./AddToCart";
+import AddToCart from "./AddToCart";
 
 const ProductImageAndPrice = async ({
   SKU,
@@ -107,9 +109,7 @@ const ProductImageAndPrice = async ({
               >
                 Check Out
               </Button>
-              <Button className=" bg-blue-600 text-white hover:bg-blue-700 py-4.5 text-base shadow-lg border-none ">
-                Add to Cart
-              </Button>
+              <AddToCart SKU={SKU} />
             </>
           ) : (
             <div className="flex justify-center p-1 font-bold text-xl text-red-600 ">
