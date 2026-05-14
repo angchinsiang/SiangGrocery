@@ -1,17 +1,20 @@
 "use client";
 
-import { updateLike } from "@/app/actions/uploadLike";
+import { updateLike } from "@/actions/uploadLike";
 import { Button } from "@/components/ui/button";
 import { useAuth, useClerk } from "@clerk/nextjs";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useOptimistic, useTransition } from "react";
 import { BiLike, BiSolidLike } from "react-icons/bi";
 
-const LikeCommentButton = ({
+const LikeCommentButton2 = ({
+  SKU,
   hasLiked,
   likeCount,
   commentId,
 }: {
+  SKU: string;
   hasLiked: boolean;
   likeCount: number;
   commentId: string;
@@ -24,6 +27,18 @@ const LikeCommentButton = ({
     hasLiked,
     (prev) => !prev,
   );
+
+  const queryClient = useQueryClient();
+  const likeActionUpdate = useMutation({
+    mutationFn: async () => {
+      return await handleLike();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["comments", SKU],
+      });
+    },
+  });
 
   const handleLike = async () => {
     if (!userId) {
@@ -44,7 +59,11 @@ const LikeCommentButton = ({
   };
 
   return (
-    <Button variant="ghost" disabled={isPending} onClick={handleLike}>
+    <Button
+      variant="ghost"
+      disabled={isPending}
+      onClick={() => likeActionUpdate.mutate()}
+    >
       {optimisticCommentLike ? (
         <>
           <BiSolidLike />({likeCount})
@@ -58,4 +77,4 @@ const LikeCommentButton = ({
   );
 };
 
-export default LikeCommentButton;
+export default LikeCommentButton2;

@@ -2,9 +2,9 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
-import PriceTag from "../../Components/PriceTag";
-import CartButton from "./CartButton";
-import WishlistButton from "../../Components/WishlistButton";
+import PriceTag from "./PriceTag";
+import CartButton from "../../app/(store)/store/CartButton";
+import WishlistButton from "../client/WishlistButton";
 
 const StoreProductCard = async ({
   SKU,

@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import dummyImg from "@/public/DummyImg.jpg";
-import StoreProductCard from "../(store)/store/StoreProductCard";
+import StoreProductCard from "./StoreProductCard";
+import prisma from "@/lib/prisma";
 
-const MoreSection = () => {
+const MoreSection = async () => {
+ 
   return (
     <div className="w-full pt-20 flex flex-col gap-0 items-center">
       <p className="text-lg font-semibold ">You May Also Like</p>

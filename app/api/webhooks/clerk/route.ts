@@ -41,6 +41,7 @@ export const POST = async (req: Request) => {
     const {
       id,
       email_addresses,
+      image_url,
       first_name,
       last_name,
       primary_email_address_id,
@@ -65,6 +66,7 @@ export const POST = async (req: Request) => {
           email: primaryEmail ? primaryEmail : "example@gmail.com",
           name: (first_name || "") + " " + (last_name || "") || "New User",
           phone: primaryPhone ? primaryPhone : "",
+          image_url: image_url,
         },
       });
       console.log("\n\n", JSON.stringify(user), "\n");

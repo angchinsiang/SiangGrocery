@@ -1,9 +1,9 @@
 "use client";
 
-import { updateWishlist } from "@/app/actions/updateWishlist";
+import { updateWishlist } from "@/actions/updateWishlist";
 import { Button } from "@/components/ui/button";
 import { GoHeart, GoHeartFill } from "react-icons/go";
-import { useWishlist } from "../hooks/use-wishlist";
+import { useWishlist } from "../../hooks/use-wishlist";
 
 const WishlistButton = ({
   className,

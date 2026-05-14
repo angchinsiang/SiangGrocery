@@ -1,4 +1,8 @@
-import PriceTag from "@/app/Components/PriceTag";
+"use client";
+
+import { remainingStock } from "@/actions/product-details/getRemainingStock";
+import { totalUnitSold } from "@/actions/product-details/getTotalUnitSold";
+import PriceTag from "@/components/server/PriceTag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,12 +12,11 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
-import prisma from "@/lib/prisma";
 import Link from "next/link";
-import AddToWishlist from "./AddToCart";
 import AddToCart from "./AddToCart";
+import { useQuery } from "@tanstack/react-query";
 
-const ProductImageAndPrice = async ({
+const ProductImageAndPrice = ({
   SKU,
   name,
   originalPrice: oriPrice,
@@ -28,21 +31,17 @@ const ProductImageAndPrice = async ({
 }) => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const totalUnitSold = await prisma.grocery_Order.aggregate({
-    _sum: { quantity: true },
-    where: {
-      listed_product: {
-        SKU: SKU,
-      },
-      order_ticket: { createdAt: { gte: thirtyDaysAgo }, status: "COMPLETED" },
-    },
+  const { data, isError, isLoading, isFetching } = useQuery({
+    queryKey: ["sales-and-stock", SKU],
+    queryFn: () =>
+      Promise.all([
+        totalUnitSold({ SKU, startDate: thirtyDaysAgo }),
+        remainingStock({ SKU }),
+      ]),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
   });
-
-  const remainingUnits = await prisma.listed_Product.aggregate({
-    _sum: { total_qty: true },
-    where: { SKU: SKU, isDisplay: true },
-  });
+  const [unitSold, stock] = data as [number, number];
 
   return (
     <div className="flex">
@@ -71,13 +70,9 @@ const ProductImageAndPrice = async ({
             <div className="flex flex-col gap-0.5">
               <p className="text-3xl font-normal">{name}</p>
               <div className="flex items-center gap-2.5">
-                <span className="text-xs">
-                  {totalUnitSold._sum.quantity || 0} sold
-                </span>
+                <span className="text-xs">{unitSold || 0} sold</span>
                 <Separator orientation="vertical" className="bg-black" />
-                <span className="text-xs">
-                  {remainingUnits._sum.total_qty || 0} left
-                </span>
+                <span className="text-xs">{stock || 0} left</span>
               </div>
             </div>
             <div>
@@ -101,7 +96,7 @@ const ProductImageAndPrice = async ({
         </div>
         <Separator className="my-3" />
         <div className="flex flex-col gap-3 px-20">
-          {(remainingUnits?._sum.total_qty || 0) > 0 ? (
+          {(stock || 0) > 0 ? (
             <>
               <Button
                 variant="destructive"

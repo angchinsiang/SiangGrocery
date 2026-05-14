@@ -1,6 +1,6 @@
 import BodyTemplate from "@/app/Components/BodyTemplate";
 import React from "react";
-import StoreProductCard from "../StoreProductCard";
+import StoreProductCard from "../../../../components/server/StoreProductCard";
 import dummyImage from "@/public/DummyImg.jpg";
 import MoreSection from "@/app/Components/MoreSection";
 

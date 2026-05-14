@@ -15,6 +15,7 @@ datasource db {
 model User {
   id        String   @id
   name      String
+  image_url String?
   email     String   @unique
   address   String[]
   phone     String?

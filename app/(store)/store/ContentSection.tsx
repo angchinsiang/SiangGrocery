@@ -1,5 +1,5 @@
 import dummyImg from "@/public/DummyImg.jpg";
-import StoreProductCard from "./StoreProductCard";
+import StoreProductCard from "../../../components/server/StoreProductCard";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
 

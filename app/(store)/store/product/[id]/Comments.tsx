@@ -1,40 +1,29 @@
+import { getCommentCount } from "@/actions/comment-bundle/getCommentCount";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Prisma } from "@/lib/generated/prisma";
-import prisma from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
 import LikeCommentButton from "./LikeCommentButton";
 
 export type CommentWithUser = Prisma.CommentGetPayload<{
   include: {
     user: {
-      select: { name: true; id: true };
+      select: { name: true; id: true; image_url: true };
     };
     _count: { select: { commentLikes: true } };
     commentLikes: true;
   };
 }>;
 
-const Comments = async ({
-  comments,
-  SKU,
-}: {
-  comments: CommentWithUser[];
-  SKU: string;
-}) => {
-  const commentCount = await prisma.comment.aggregate({
-    where: { SKU: SKU },
-    _count: { id: true },
-  });
-  const sessionUser = await currentUser();
-  const userImage = sessionUser?.imageUrl || "https://github.com/shadcn.png";
-
+const Comments = async ({ SKU }: { SKU: string }) => {
+  const commentCount = await getCommentCount({ SKU });
+  
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-5 justify-between">
-        <p className="font-bold text-xl">Comments ({commentCount._count.id})</p>
-        <Button variant="link" className="text-muted-foreground">
-          Read More
+        <p className="font-bold text-xl">Comments ({commentCount})</p>
+        <Button variant={"link"} asChild className="text-muted-foreground">
+          <Link href={`/store/product/${SKU}/comments`}>Read More</Link>
         </Button>
         {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -55,14 +44,17 @@ const Comments = async ({
             <DropdownMenuItem>3 Stars</DropdownMenuItem>
             <DropdownMenuItem>2 Stars</DropdownMenuItem>
             <DropdownMenuItem>1 Star</DropdownMenuItem>
-          </DropdownMenuContent>
+          </DropdownMenuContent>  
         </DropdownMenu> */}
       </div>
       {comments.map((c) => (
         <div className="flex flex-col gap-2" key={c.id}>
           <div className="flex gap-1.5">
             <Avatar>
-              <AvatarImage src={userImage} alt={c.user.name} />
+              <AvatarImage
+                src={c.user.image_url || "https://github.com/shadcn.png"}
+                alt={c.user.name}
+              />
               <AvatarFallback>{c.user.name}</AvatarFallback>
             </Avatar>
             <div>
@@ -79,7 +71,7 @@ const Comments = async ({
             <p className="text-sm">{c.comment}</p>
             <div className="flex justify-end">
               <LikeCommentButton
-                commentLike={c.commentLikes}
+                hasLiked={c.commentLikes.length > 0}
                 likeCount={c._count.commentLikes}
                 commentId={c.id}
               />

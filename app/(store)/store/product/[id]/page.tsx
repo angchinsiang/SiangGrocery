@@ -1,12 +1,14 @@
-import Comments from "./Comments";
-import DescriptionSection from "./DescriptionSection";
-import MoreSection from "../../../../Components/MoreSection";
-import ProductImageAndPrice from "./ProductImage&Price";
 import BodyTemplate from "@/app/Components/BodyTemplate";
 import prisma from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { notFound } from "next/navigation";
+import MoreSection from "../../../../Components/MoreSection";
+import Comments from "./Comments";
+import DescriptionSection from "./DescriptionSection";
+import ProductImageAndPrice from "./ProductImage&Price";
+import { unstable_cache } from "next/cache";
+import { getGrocery } from "@/actions/product-details/getGrocery";
 
 export async function generateMetadata({
   params,
@@ -51,31 +53,9 @@ export async function generateMetadata({
 // console.log(`\n\n${JSON.stringify(grocery_media, null, 2)}\n\n`);
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id: SKU } = await params;
-  const session = await auth();
+  const grocery = await getGrocery({ SKU });
 
-  const grocery = await prisma.grocery.findUnique({
-    where: { id: SKU },
-    include: {
-      listedProducts: { orderBy: { createdAt: "desc" }, take: 1 },
-      comments: {
-        include: {
-          user: {
-            select: { name: true, id: true },
-          },
-          _count: { select: { commentLikes: true } },
-          commentLikes: {
-            where: {
-              user_id: session?.userId || "UNAUTHENTICATED_USER",
-            },
-          },
-        },
-        take: 3,
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
-
-  console.log(`\n\n${JSON.stringify(grocery, null, 2)}\n\n`);
+  // console.log(`\n\n${JSON.stringify(grocery, null, 2)}\n\n`);
   if (!grocery) notFound();
 
   return (
@@ -93,11 +73,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           description={grocery.description}
           name={grocery.name}
         />
-        <Comments comments={grocery.comments} SKU={SKU} />
+        <Comments SKU={SKU} />
       </div>
       <MoreSection />
     </BodyTemplate>
   );
 };
+
+export const revalidate = 60;
 
 export default page;

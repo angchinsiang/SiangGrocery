@@ -28,6 +28,7 @@ export async function updateLike({
         data: { user_id: userId, comment_id: commentId },
       });
     }
+
     revalidatePath(pathname);
   } catch (e) {
     console.log(`Error in updateLike: ${e}`);
