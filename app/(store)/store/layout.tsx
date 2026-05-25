@@ -5,7 +5,7 @@ import "../../globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import NavBar from "./NavBar";
-import Footer from "@/app/Components/Footer";
+import Footer from "@/components/server/Footer";
 import QueryClientProvider from "./QueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
 

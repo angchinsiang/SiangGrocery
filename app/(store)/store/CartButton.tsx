@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { usePathname } from "next/navigation";
-import { addToCart } from "@/app/actions/addToCart";
+import { addToCart } from "@/actions/addToCart";
 import { useTransition } from "react";
 
 const CartButton = ({ SKU }: { SKU: string }) => {

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
 import {
   QueryClient,
   QueryClientProvider as ReactQueryClientProvider,
 } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import React, { useState } from "react";
 
 const QueryClientProvider = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(
@@ -20,11 +19,9 @@ const QueryClientProvider = ({ children }: { children: React.ReactNode }) => {
         },
       }),
   );
-
   return (
     <ReactQueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={false} />
     </ReactQueryClientProvider>
   );
 };

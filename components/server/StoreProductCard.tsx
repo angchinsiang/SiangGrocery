@@ -1,12 +1,11 @@
-import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+// import { auth } from "@clerk/nextjs/server";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 import PriceTag from "./PriceTag";
 import CartButton from "../../app/(store)/store/CartButton";
-import WishlistButton from "../client/WishlistButton";
+// import WishlistButton from "../client/WishlistButton";
 
-const StoreProductCard = async ({
+const StoreProductCard = ({
   SKU,
   image,
   alt,
@@ -23,14 +22,14 @@ const StoreProductCard = async ({
   unit: string;
   country: string;
 }) => {
-  const session = await auth();
+  // const session = await auth();
 
-  const isInWishlist = await prisma.wishlist.findFirst({
-    where: { user_id: session?.userId || undefined },
-    include: {
-      wishlistItems: { select: { wishlist_id: true }, where: { SKU: SKU } },
-    },
-  });
+  // const isInWishlist = await prisma.wishlist.findFirst({
+  //   where: { user_id: session?.userId || undefined },
+  //   include: {
+  //     wishlistItems: { select: { wishlist_id: true }, where: { SKU: SKU } },
+  //   },
+  // });
 
   return (
     // 1. ADDED 'relative' to trap the Heart button inside!
@@ -59,10 +58,10 @@ const StoreProductCard = async ({
       </div>
       {/* The Heart is now safely trapped 5px from the top-right edge of the card! */}
       <div className="absolute top-5 right-5">
-        <WishlistButton
+        {/* <WishlistButton
           isInWishlist={!!isInWishlist?.wishlistItems.length}
           SKU={SKU}
-        />
+        /> */}
       </div>
     </Link>
   );

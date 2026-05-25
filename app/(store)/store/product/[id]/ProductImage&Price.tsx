@@ -35,13 +35,12 @@ const ProductImageAndPrice = ({
     queryKey: ["sales-and-stock", SKU],
     queryFn: () =>
       Promise.all([
-        totalUnitSold({ SKU, startDate: thirtyDaysAgo }),
+        totalUnitSold({ SKU, startDate: thirtyDaysAgo.toISOString() }),
         remainingStock({ SKU }),
       ]),
-    staleTime: 1000 * 30,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
   });
-  const [unitSold, stock] = data as [number, number];
 
   return (
     <div className="flex">
@@ -70,9 +69,9 @@ const ProductImageAndPrice = ({
             <div className="flex flex-col gap-0.5">
               <p className="text-3xl font-normal">{name}</p>
               <div className="flex items-center gap-2.5">
-                <span className="text-xs">{unitSold || 0} sold</span>
+                <span className="text-xs">{data?.[0] || 0} sold</span>
                 <Separator orientation="vertical" className="bg-black" />
-                <span className="text-xs">{stock || 0} left</span>
+                <span className="text-xs">{data?.[1] || 0} left</span>
               </div>
             </div>
             <div>
@@ -96,7 +95,7 @@ const ProductImageAndPrice = ({
         </div>
         <Separator className="my-3" />
         <div className="flex flex-col gap-3 px-20">
-          {(stock || 0) > 0 ? (
+          {(data?.[1] || 0) > 0 ? (
             <>
               <Button
                 variant="destructive"

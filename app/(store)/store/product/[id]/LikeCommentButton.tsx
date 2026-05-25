@@ -1,6 +1,6 @@
 "use client";
 
-import { updateLike } from "@/app/actions/uploadLike";
+import { updateLike } from "@/actions/uploadLike";
 import { Button } from "@/components/ui/button";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";

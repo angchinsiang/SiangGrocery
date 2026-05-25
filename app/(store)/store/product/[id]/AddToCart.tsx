@@ -1,6 +1,6 @@
 "use client";
 
-import { addToCart } from "@/app/actions/addToCart";
+import { addToCart } from "@/actions/addToCart";
 import { Button } from "@/components/ui/button";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";

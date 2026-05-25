@@ -4,8 +4,8 @@ import "../globals.css";
 import NavBar from "./NavBar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import Footer from "../Components/Footer";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Footer from "@/components/server/Footer";
+import QueryClientProvider from "./QueryClientProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -41,13 +41,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const queryClient = new QueryClient();
   return (
     <html lang="en" className={inter.className}>
       <body
         className={`${itim.variable} ${inter.variable} ${hennyPenny.variable} antialiased`}
       >
-        <QueryClientProvider client={queryClient}>
+        <QueryClientProvider>
           <ClerkProvider>
             <NavBar />
             {children}

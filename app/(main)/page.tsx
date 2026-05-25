@@ -4,7 +4,7 @@ import DeliveryAssurance from "./DeliveryAssurance";
 import PaperBag from "./PaperBag";
 import DiscountSection from "./DiscountSection";
 import Comments from "./Comments";
-import GoUp from "../Components/GoUp";
+import GoUp from "@/components/client/GoUp";
 
 const Page = () => {
   return (

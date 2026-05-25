@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import React from "react";
 import { FaLocationDot } from "react-icons/fa6";
 import { GoClockFill } from "react-icons/go";
-import { LuCalendarClock } from "react-icons/lu";
 import { MdArrowBackIosNew } from "react-icons/md";
 
 const ServiceButtons = () => {

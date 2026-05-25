@@ -1,7 +1,9 @@
+import { getComment } from "@/actions/comment-bundle/getComment";
 import { getCommentCount } from "@/actions/comment-bundle/getCommentCount";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Prisma } from "@/lib/generated/prisma";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import LikeCommentButton from "./LikeCommentButton";
 
@@ -16,8 +18,10 @@ export type CommentWithUser = Prisma.CommentGetPayload<{
 }>;
 
 const Comments = async ({ SKU }: { SKU: string }) => {
+  const { userId } = await auth();
   const commentCount = await getCommentCount({ SKU });
-  
+  const comments = await getComment({ SKU, userId });
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-5 justify-between">
@@ -25,27 +29,6 @@ const Comments = async ({ SKU }: { SKU: string }) => {
         <Button variant={"link"} asChild className="text-muted-foreground">
           <Link href={`/store/product/${SKU}/comments`}>Read More</Link>
         </Button>
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="link" className="text-muted-foreground">
-              Filter By
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Newest</DropdownMenuLabel>
-              <DropdownMenuItem>Oldest</DropdownMenuItem>
-              <DropdownMenuItem>Highest Rating</DropdownMenuItem>
-              <DropdownMenuItem>Lowest Rating</DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>5 Stars</DropdownMenuItem>
-            <DropdownMenuItem>4 Stars</DropdownMenuItem>
-            <DropdownMenuItem>3 Stars</DropdownMenuItem>
-            <DropdownMenuItem>2 Stars</DropdownMenuItem>
-            <DropdownMenuItem>1 Star</DropdownMenuItem>
-          </DropdownMenuContent>  
-        </DropdownMenu> */}
       </div>
       {comments.map((c) => (
         <div className="flex flex-col gap-2" key={c.id}>
@@ -61,7 +44,7 @@ const Comments = async ({ SKU }: { SKU: string }) => {
               <div className="flex flex-col">
                 <p className="font-medium text-sm">{c.user.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {c.createdAt.toDateString()}
+                  {new Date(c.createdAt).toDateString()}
                 </p>
               </div>
             </div>
@@ -71,7 +54,7 @@ const Comments = async ({ SKU }: { SKU: string }) => {
             <p className="text-sm">{c.comment}</p>
             <div className="flex justify-end">
               <LikeCommentButton
-                hasLiked={c.commentLikes.length > 0}
+                hasLiked={c.hasLiked.length > 0}
                 likeCount={c._count.commentLikes}
                 commentId={c.id}
               />

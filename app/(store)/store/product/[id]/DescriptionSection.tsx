@@ -1,28 +1,26 @@
-import { Button } from "@/components/ui/button";
-import React from "react";
-import { FaRegHeart, FaRegShareFromSquare } from "react-icons/fa6";
+"use client";
+import { getWishlistStatus } from "@/actions/wishlist-bundle/getWishlistStatus";
+import WishlistButton from "@/components/client/WishlistButton";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import Description from "./Description";
-import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import WishlistButton from "../../../../Components/WishlistButton";
 import ShareButton from "./ShareButton";
 
-const DescriptionSection = async ({
+const DescriptionSection = ({
   SKU,
   description,
   name,
+  userId,
 }: {
   SKU: string;
   description: string;
   name: string;
+  userId: string | null;
 }) => {
-  const session = await auth();
-
-  const isInWishlist = await prisma.wishlist.findFirst({
-    where: { user_id: session?.userId || undefined },
-    include: {
-      wishlistItems: { select: { wishlist_id: true }, where: { SKU: SKU } },
-    },
+  const { data } = useSuspenseQuery({
+    queryKey: ["wishlist", "status", SKU],
+    queryFn: async () => await getWishlistStatus({ SKU, userId }),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
   return (
@@ -32,7 +30,7 @@ const DescriptionSection = async ({
         <div>
           <WishlistButton
             className=" size-5"
-            isInWishlist={!!isInWishlist?.wishlistItems.length}
+            isInWishlist={data || false}
             SKU={SKU}
           />
           <ShareButton name={name} />
