@@ -1,10 +1,10 @@
-import BodyTemplate from "@/app/Components/BodyTemplate";
-import SupportButton from "@/app/Components/SupportButton";
+import BodyTemplate from "@/components/server/BodyTemplate";
+import SupportButton from "@/components/client/SupportButton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import dummyImage from "@/public/DummyImg.jpg";
 import OrderItem from "./OrderItem";
 import OrderItemGroup from "./OrderItemGroup";
-import GoUp from "@/app/Components/GoUp";
+import GoUp from "@/components/client/GoUp";
 
 const orders = [
   {

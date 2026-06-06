@@ -9,26 +9,26 @@ import Footer from "@/components/server/Footer";
 import QueryClientProvider from "./QueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+export const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
-const hennyPenny = Henny_Penny({
+export const hennyPenny = Henny_Penny({
   weight: ["400"],
   subsets: ["latin"],
   variable: "--font-hennypenny",
 });
 
-const itim = Itim({
+export const itim = Itim({
   weight: ["400"],
   subsets: ["latin"],
   variable: "--font-itim",
 });
 
-const geistSans = Geist({
+export const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+export const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });

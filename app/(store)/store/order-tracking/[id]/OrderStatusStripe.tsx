@@ -1,4 +1,4 @@
-import SupportButton from "@/app/Components/SupportButton";
+import SupportButton from "@/components/client/SupportButton";
 import React from "react";
 import { TbTruckDelivery } from "react-icons/tb";
 

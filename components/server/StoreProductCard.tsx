@@ -2,7 +2,7 @@
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 import PriceTag from "./PriceTag";
-import CartButton from "../../app/(store)/store/CartButton";
+import CartButton from "@/app/(store)/store/CartButton";
 // import WishlistButton from "../client/WishlistButton";
 
 const StoreProductCard = ({

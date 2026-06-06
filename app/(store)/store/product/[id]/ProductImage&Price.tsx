@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import AddToCart from "./AddToCart";
 import { useQuery } from "@tanstack/react-query";
+import CheckOutBtn from "./CheckOutBtn";
 
 const ProductImageAndPrice = ({
   SKU,
@@ -97,12 +98,7 @@ const ProductImageAndPrice = ({
         <div className="flex flex-col gap-3 px-20">
           {(data?.[1] || 0) > 0 ? (
             <>
-              <Button
-                variant="destructive"
-                className="py-4.5 font-semibold text-base shadow-lg/5 border-red-200 "
-              >
-                Check Out
-              </Button>
+              <CheckOutBtn SKU={SKU} />
               <AddToCart SKU={SKU} />
             </>
           ) : (

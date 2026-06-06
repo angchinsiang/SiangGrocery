@@ -1,8 +1,8 @@
 "use client";
 
-import { fetchMediaAssets } from "@/app/actions/fetchMedia";
-import { uploadGrocery } from "@/app/actions/uploadGrocery";
-import useDebounce from "@/app/hooks/use-debounce";
+import { fetchMediaAssets } from "@/actions/fetchMedia";
+import { uploadGrocery } from "@/actions/uploadGrocery";
+import useDebounce from "@/hooks/use-debounce";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -50,6 +50,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Category,
+  Country,
   Form,
   MediaAsset,
   Media_Category,
@@ -657,6 +658,51 @@ const AddGroceryPage = () => {
                   {/* {errors.mou?.message && (
                     <FieldDescription className="text-red-500">
                       {errors.mou.message}
+                    </FieldDescription>
+                  )} */}
+                </Field>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <Field>
+                  <FieldLabel htmlFor="checkout-country-ts6">
+                    Country
+                    {errors.country?.message && (
+                      <span className="text-red-500 -ml-1">*</span>
+                    )}
+                  </FieldLabel>
+                  <Controller
+                    control={control}
+                    name="country"
+                    render={({ field }) => (
+                      <Select
+                        defaultValue=""
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger id="checkout-country-ts6">
+                          <SelectValue placeholder="Select Country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {Object.values(Country).map((country) => {
+                              const formattedName = country
+                                .replace(/_/g, " ") // Replace underscores with spaces
+                                .toLowerCase() // Make it all lowercase
+                                .replace(/\b\w/g, (c) => c.toUpperCase()); // Capitalize first letters
+                              return (
+                                <SelectItem key={country} value={country}>
+                                  {formattedName}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {/* {errors.category?.  message && (
+                    <FieldDescription className="text-red-500">
+                      {errors.category.message}
                     </FieldDescription>
                   )} */}
                 </Field>

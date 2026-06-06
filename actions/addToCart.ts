@@ -1,7 +1,9 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { setCartCookie } from "@/actions/cookies-bundle/cookieActions";
 
 export async function addToCart({
   userId,
@@ -29,6 +31,8 @@ export async function addToCart({
         },
       });
       console.log("added new cart!");
+      // Auto-check newly added item in cookie
+      await setCartCookie(SKU, 1);
     } else {
       const hasItem = await prisma.cart_Item.findFirst({
         where: { cart_id: existingCart.id, SKU: SKU },
@@ -39,6 +43,8 @@ export async function addToCart({
           data: { quantity: hasItem.quantity + 1 },
         });
         console.log("added to cart quantity increase");
+        // Update cookie with new quantity
+        await setCartCookie(SKU, hasItem.quantity + 1);
       } else {
         const addedItem = await prisma.cart_Item.create({
           data: {
@@ -47,6 +53,8 @@ export async function addToCart({
           },
         });
         console.log("added to cart: ", addedItem);
+        // Auto-check newly added item in cookie
+        await setCartCookie(SKU, 1);
       }
     }
     revalidatePath(pathname);
@@ -54,4 +62,29 @@ export async function addToCart({
     console.error(`Fail to add to cart: ${error}`);
     return { error: "Fail to add to cart" };
   }
+}
+
+export async function updateCart(quantity: number, SKU: string) {
+  if (quantity - 1 === 0) return quantity;
+
+  const { userId } = await auth();
+  if (!userId) throw new Error("Invalid User!");
+
+  const existingCart = await prisma.cart.findFirst({
+    where: { user_id: userId },
+  });
+  if (!existingCart) throw new Error("Invalid Cart!");
+
+  const hasItem = await prisma.cart_Item.findFirst({
+    where: { cart_id: existingCart.id, SKU: SKU },
+  });
+  if (!hasItem) throw new Error("Invalid Item!");
+
+  await prisma.cart_Item.update({
+    where: { id: hasItem.id },
+    data: { quantity: quantity },
+  });
+  console.log("updated cart quantity");
+
+  return quantity;
 }

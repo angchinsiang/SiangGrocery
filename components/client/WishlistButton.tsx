@@ -1,9 +1,10 @@
 "use client";
 
-import { updateWishlist } from "@/actions/updateWishlist";
+import { updateWishlistStatus } from "@/actions/wishlist-bundle/updateWishlistStatus";
 import { Button } from "@/components/ui/button";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import { useWishlist } from "../../hooks/use-wishlist";
+import { QueryClient } from "@tanstack/react-query";
 
 const WishlistButton = ({
   className,
@@ -14,10 +15,17 @@ const WishlistButton = ({
   isInWishlist: boolean;
   SKU: string;
 }) => {
+  const queryClient = new QueryClient();
   const [optimisticWishlist, handleWishlist, isPending] = useWishlist<
     boolean,
     { SKU: string }
-  >(isInWishlist, (prev) => !prev, updateWishlist);
+  >(isInWishlist, (prev) => !prev, {
+    mainAction: updateWishlistStatus,
+    options: {
+      onSuccess: () =>
+        queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
+    },
+  });
 
   return (
     <Button

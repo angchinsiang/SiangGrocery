@@ -17,11 +17,13 @@ const DescriptionSection = ({
   userId: string | null;
 }) => {
   const { data } = useSuspenseQuery({
-    queryKey: ["wishlist", "status", SKU],
-    queryFn: async () => await getWishlistStatus({ SKU, userId }),
+    queryKey: ["wishlist"],
+    queryFn: async () => await getWishlistStatus({ userId }),
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
+
+  const isInWishlist = data.includes(SKU);
 
   return (
     <div className="w-full flex flex-col gap-5 ">
@@ -30,7 +32,7 @@ const DescriptionSection = ({
         <div>
           <WishlistButton
             className=" size-5"
-            isInWishlist={data || false}
+            isInWishlist={isInWishlist}
             SKU={SKU}
           />
           <ShareButton name={name} />

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   Category,
+  Country,
   Form,
   Grocery_Status,
   Media_Category,
@@ -32,6 +33,7 @@ export const grocerySchema = z.object({
   expiryDate: z.date(),
   isPromotion: z.boolean(),
   status: z.boolean(),
+  country: z.enum(Country),
 });
 
 export type GroceryFormData = z.infer<typeof grocerySchema>;

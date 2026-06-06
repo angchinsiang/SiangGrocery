@@ -1,8 +1,8 @@
-import BodyTemplate from "@/app/Components/BodyTemplate";
+import BodyTemplate from "@/components/server/BodyTemplate";
 import React from "react";
-import StoreProductCard from "../../../../components/server/StoreProductCard";
+import StoreProductCard from "@/components/server/StoreProductCard";
 import dummyImage from "@/public/DummyImg.jpg";
-import MoreSection from "@/app/Components/MoreSection";
+import MoreSection from "@/components/server/MoreSection";
 
 const page = () => {
   return (
@@ -10,6 +10,7 @@ const page = () => {
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           <StoreProductCard
+            SKU="200"
             image={dummyImage}
             alt="Fresh Milk"
             price={8.99}
@@ -18,6 +19,7 @@ const page = () => {
             country="Malaysia"
           />
           <StoreProductCard
+            SKU="200"
             image={dummyImage}
             alt="Fresh Milk"
             price={8.99}
@@ -26,6 +28,7 @@ const page = () => {
             country="Malaysia"
           />
           <StoreProductCard
+            SKU="200"
             image={dummyImage}
             alt="Fresh Milk"
             price={8.99}
@@ -34,6 +37,7 @@ const page = () => {
             country="Malaysia"
           />
           <StoreProductCard
+            SKU="200"
             image={dummyImage}
             alt="Fresh Milk"
             price={8.99}
@@ -42,6 +46,7 @@ const page = () => {
             country="Malaysia"
           />
           <StoreProductCard
+            SKU="200"
             image={dummyImage}
             alt="Fresh Milk"
             price={8.99}

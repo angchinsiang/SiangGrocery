@@ -1,16 +1,14 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 
-export const updateWishlist = async ({
+export const updateWishlistStatus = async ({
   userId,
   SKU,
-  pathname,
 }: {
   userId: string;
   SKU: string;
-  pathname: string;
 }) => {
   try {
     const hasWishlist = await prisma.wishlist.findFirst({
@@ -48,9 +46,11 @@ export const updateWishlist = async ({
         });
       }
     }
-    revalidatePath(pathname);
+
+    updateTag(`wishlist-${userId}`);
+    return { success: true };
   } catch (error) {
     console.error(`Fail to update wishlist ${error}`);
-    return { error: "Fail to update wishlist" };
+    return { success: false };
   }
 };

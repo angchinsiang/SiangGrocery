@@ -2,7 +2,7 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FaRegEdit } from "react-icons/fa";
-import BodyTemplate from "@/app/Components/BodyTemplate";
+import BodyTemplate from "@/components/server/BodyTemplate";
 import { Switch } from "@/components/ui/switch";
 import { FaChevronRight } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";

@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "Delivery_Status" AS ENUM ('WAITING_FOR_PAYMENT', 'PENDING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'RETURNED', 'CANCELLED');
+
+-- AlterTable
+ALTER TABLE "Order_Ticket" ADD COLUMN     "deliveryStatus" "Delivery_Status" NOT NULL DEFAULT 'WAITING_FOR_PAYMENT';

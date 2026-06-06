@@ -2,7 +2,7 @@ import {
   BuyAgainButton,
   OrderDetailsButton,
   ReviewButton,
-} from "@/app/Components/OrderHistoryButtons";
+} from "@/components/client/OrderHistoryButtons";
 import React from "react";
 
 type statusTypes =

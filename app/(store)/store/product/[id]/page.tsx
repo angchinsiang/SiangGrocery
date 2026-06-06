@@ -10,6 +10,12 @@ import { getGrocery } from "@/actions/product-details/getGrocery";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@clerk/nextjs/server";
+import {
+  HydrationBoundary,
+  QueryClient,
+  dehydrate,
+} from "@tanstack/react-query";
+import { getWishlistStatus } from "@/actions/wishlist-bundle/getWishlistStatus";
 
 export async function generateMetadata({
   params,
@@ -60,32 +66,42 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   // console.log(`\n\n${JSON.stringify(grocery, null, 2)}\n\n`);
   if (!grocery) notFound();
 
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: ["wishlist"],
+    queryFn: () => (userId ? getWishlistStatus({ userId }) : []),
+    staleTime: Infinity,
+  });
+
   return (
-    <BodyTemplate className="pt-1">
-      <ProductImageAndPrice
-        SKU={SKU}
-        name={grocery.name}
-        originalPrice={grocery.listedProducts[0]?.original_price || 99999}
-        discountPrice={grocery.listedProducts[0]?.discount_price || 99999}
-        MoU={grocery.MoU}
-      />
-      <div className="w-[50%] flex flex-col gap-10">
-        <Suspense
-          fallback={Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-5 w-full" />
-          ))}
-        >
-          <DescriptionSection
-            SKU={SKU}
-            description={grocery.description}
-            name={grocery.name}
-            userId={userId}
-          />
-        </Suspense>
-        <Comments SKU={SKU} />
-      </div>
-      <MoreSection />
-    </BodyTemplate>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <BodyTemplate className="pt-1">
+        <ProductImageAndPrice
+          SKU={SKU}
+          name={grocery.name}
+          originalPrice={grocery.listedProducts[0]?.original_price || 99999}
+          discountPrice={grocery.listedProducts[0]?.discount_price || 99999}
+          MoU={grocery.MoU}
+        />
+        <div className="w-[50%] flex flex-col gap-10">
+          <Suspense
+            fallback={Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-5 w-full" />
+            ))}
+          >
+            <DescriptionSection
+              SKU={SKU}
+              description={grocery.description}
+              name={grocery.name}
+              userId={userId}
+            />
+          </Suspense>
+          <Comments SKU={SKU} />
+        </div>
+        <MoreSection />
+      </BodyTemplate>
+    </HydrationBoundary>
   );
 };
 

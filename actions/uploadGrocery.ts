@@ -15,6 +15,7 @@ export async function uploadGrocery({
   isPromotion,
   expiryDate,
   status,
+  country,
 }: GroceryFormData) {
   const user = await auth();
   if (!user) {
@@ -35,6 +36,7 @@ export async function uploadGrocery({
         isPromotion,
         expiryDate,
         status,
+        country,
       },
     });
 

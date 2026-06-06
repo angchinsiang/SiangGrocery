@@ -22,12 +22,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  carts         Cart[]
-  wishlists     Wishlist[]
-  order_tickets Order_Ticket[]
-  comments      Comment[]
-  addresses     Address[]
-  commentLikes  CommentLike[]
+  carts                Cart[]
+  wishlists            Wishlist[]
+  order_tickets        Order_Ticket[]
+  comments             Comment[]
+  addresses            Address[]
+  commentLikes         CommentLike[]
+  userCoupons          User_Coupon[]
+  couponUsageHistories Coupon_Usage_History[]
 }
 
 model Address {
@@ -74,7 +76,7 @@ model Cart_Item {
 }
 
 model Grocery {
-  id          String   @id
+  id          String   @id @default(uuid())
   name        String
   description String
   image       String
@@ -145,7 +147,43 @@ model Coupon {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  order_tickets Order_Ticket[]
+  order_tickets        Order_Ticket[]
+  userCoupons          User_Coupon[]
+  couponUsageHistories Coupon_Usage_History[]
+}
+
+model User_Coupon {
+  id        String             @id
+  user_id   String
+  coupon_id String
+  status    User_Coupon_Status @default(UNREDEEMED)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  user   User   @relation(fields: [user_id], references: [id])
+  coupon Coupon @relation(fields: [coupon_id], references: [id])
+
+  @@unique([user_id, coupon_id])
+}
+
+model Coupon_Usage_History {
+  id        String   @id
+  user_id   String
+  coupon_id String
+  ot_id     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User         @relation(fields: [user_id], references: [id])
+  coupon       Coupon       @relation(fields: [coupon_id], references: [id])
+  order_ticket Order_Ticket @relation(fields: [ot_id], references: [id])
+
+  @@unique([user_id, coupon_id, ot_id])
+}
+
+enum User_Coupon_Status {
+  UNREDEEMED
+  REDEEMED
 }
 
 enum Coupon_Type {
@@ -165,13 +203,24 @@ model Order_Ticket {
   updatedAt      DateTime        @updatedAt
   completed_At   DateTime?
   status         Purchase_Status @default(PENDING)
+  deliveryStatus Delivery_Status @default(WAITING_FOR_PAYMENT)
   total_amount   Float
   payment_method Payment_Method
 
   groceryOrders Grocery_Order[]
   coupons       Coupon[]
 
-  user User @relation(fields: [user_id], references: [id])
+  user                 User                   @relation(fields: [user_id], references: [id])
+  couponUsageHistories Coupon_Usage_History[]
+}
+
+enum Delivery_Status {
+  WAITING_FOR_PAYMENT
+  PENDING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED
+  CANCELLED
 }
 
 enum Payment_Method {

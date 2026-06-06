@@ -31,7 +31,10 @@ const CartButton = ({ SKU }: { SKU: string }) => {
   return (
     <Button
       disabled={isPending}
-      onClick={handleCart}
+      onClick={(e) => {
+        e.preventDefault();
+        handleCart();
+      }}
       className="aspect-square h-10 rounded-full p-0 bg-[#C9F2BD] hover:bg-[#b0dfa3]"
       type="button"
     >

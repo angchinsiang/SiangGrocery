@@ -1,11 +1,11 @@
-import BodyTemplate from "@/app/Components/BodyTemplate";
+import BodyTemplate from "@/components/server/BodyTemplate";
 import React from "react";
 import OrderStatusStripe from "./OrderStatusStripe";
 import RecepientDetailStripe from "./RecepientDetailStripe";
 import dummyImage from "@/public/DummyImg.jpg";
 import OrderItem from "../OrderItem";
 import OrderItemGroup from "../OrderItemGroup";
-import GoUp from "@/app/Components/GoUp";
+import GoUp from "@/components/client/GoUp";
 
 const page = () => {
   const receipient = "Lydia";

@@ -1,30 +1,22 @@
-"use server";
+"use server"
 
 import prisma from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 
-export async function getWishlistStatus({
-  userId,
-  SKU,
-}: {
-  userId: string | null;
-  SKU: string;
-}) {
-  if (!userId) return false;
+export async function getWishlistStatus({ userId }: { userId: string | null }) {
+  if (!userId) return [];
 
   const cachedWishlist = unstable_cache(
     async (userId: string) => {
-      const wishlistItem = await prisma.wishlist.findFirst({
-        where: { user_id: userId },
-        include: {
-          wishlistItems: { select: { wishlist_id: true }, where: { SKU: SKU } },
-        },
+      const wishlistItem = await prisma.wishlist_Item.findMany({
+        where: { wishlist: { user_id: userId } },
+        select: { SKU: true },
       });
-      return !!wishlistItem?.wishlistItems.length;
+      return wishlistItem.map((item) => item.SKU);
     },
-    [`wishlist-${SKU}-${userId}`],
+    [`wishlist-${userId}`],
     {
-      tags: [`wishlist-${SKU}-${userId}`],
+      tags: [`wishlist-${userId}`],
     },
   );
   return cachedWishlist(userId);

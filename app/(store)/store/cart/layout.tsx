@@ -1,5 +1,4 @@
 import React from "react";
-import CheckOutStripe from "./CheckOutStripe";
 
 const CheckoutLayout = ({
   children,
@@ -9,7 +8,6 @@ const CheckoutLayout = ({
   return (
     <div className="relative">
       <div className="pb-20">{children}</div>
-      <CheckOutStripe totalPrice={100.99} />
     </div>
   );
 };

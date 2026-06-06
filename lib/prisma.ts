@@ -1,10 +1,8 @@
 import { PrismaClient } from "@/lib/generated/prisma";
-import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const prismaClientSingleton = () => {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
   return new PrismaClient({ adapter }).$extends({
     query: {
@@ -17,7 +15,7 @@ const prismaClientSingleton = () => {
             Grocery: "GRC_",
             Wishlist: "WSH_",
             Wishlist_Item: "WSHI_",
-            Coupon: "CPN_",
+            Coupon: "CP_",
             Order_Ticket: "OT_",
             Grocery_Order: "GO_",
             Listed_Product: "LP_",
@@ -28,17 +26,20 @@ const prismaClientSingleton = () => {
             Logs: "LOGS_",
             Admin: "ADM_",
             Comment_Media: "CMTM_",
+            Coupon_Usage_History: "CouHist_",
+            User_Coupon: "UsrCou_",
           };
 
           const prefix = modelPrefixMap[model as string];
 
-          if (prefix && !args.data.id) {
+          const data = args.data as Record<string, any>;
+          if (prefix && !data.id) {
             const uniqueString = crypto
               .randomUUID()
               .substring(0, 9)
               .toUpperCase();
 
-            args.data.id = `${prefix}${uniqueString}`;
+            data.id = `${prefix}${uniqueString}`;
           }
 
           return query(args);

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
 
 const latestMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+const latestTwoMonth = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 const popularThreshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 const popularGroceries = await prisma.grocery_Order.groupBy({
   _sum: { quantity: true },
@@ -26,7 +27,7 @@ const whereClause: Record<sectionTitle, object> = {
     where: { isPromotion: true, status: true },
   },
   "New Arrivals": {
-    where: { createdAt: { gte: latestMonth }, status: true },
+    where: { createdAt: { gte: latestTwoMonth }, status: true },
   },
   "Currently Popular": {
     where: { id: { in: popular_ids }, status: true },

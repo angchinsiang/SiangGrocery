@@ -9,7 +9,7 @@ export const getGrocery = async ({ SKU }: { SKU: string }) => {
       const grocery = await prisma.grocery.findUnique({
         where: { id: targetSKU },
         include: {
-          listedProducts: { orderBy: { createdAt: "desc" }, take: 1 },
+          listedProducts: { orderBy: { createdAt: "asc" }, take: 1 },
           groceryMedias: {
             where: {
               media: { type: "IMAGE", status: "ACTIVE" },

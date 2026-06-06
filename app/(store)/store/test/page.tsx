@@ -1,7 +1,7 @@
 "use client";
 
-import { uploadMediaAsset } from "@/app/actions/uploadMedia";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { uploadMediaAsset } from "@/actions/uploadMedia";
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
@@ -19,15 +19,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Media_Category, Media_Type } from "@/lib/generated/prisma";
-import { UploadDropzone } from "@/lib/uploadthing";
-import Image from "next/image";
-import { useForm, Controller } from "react-hook-form";
-import { CheckCircle2Icon } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useState } from "react";
-import brocolli from "@/public/Fresh Milk.png";
 import { MediaFormData, mediaSchema } from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
+import { UploadDropzone } from "@/lib/uploadthing";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 const TestPage = () => {
@@ -77,8 +74,8 @@ const TestPage = () => {
             <Image
               src={previewImage}
               alt="an image"
-              width={450}
-              height={450}
+              width={300}
+              height={300}
               className="rounded-lg"
             ></Image>
             <FieldGroup className="mt-2">

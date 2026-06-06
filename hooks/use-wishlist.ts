@@ -5,9 +5,12 @@ import { useOptimistic, useTransition } from "react";
 export function useWishlist<State, Payload>(
   optimisticValue: State,
   optimisticCallback: (prev: State, payload?: () => void) => State,
-  serverAction: (
-    payload: Payload & { userId: string; pathname: string },
-  ) => Promise<any>,
+  serverAction: {
+    mainAction: (
+      payload: Payload & { userId: string },
+    ) => Promise<Record<string, boolean>>;
+    options?: { onSuccess?: () => void; onError?: () => void };
+  },
 ): [State, (payload: Payload) => void, boolean] {
   const { userId } = useAuth();
   const { openSignIn } = useClerk();
@@ -19,12 +22,20 @@ export function useWishlist<State, Payload>(
   );
 
   const handleWishlist = (payload: Payload) => {
+    const { mainAction, options } = serverAction;
+    const { onSuccess, onError } = options || {};
+
     if (!userId) {
       return openSignIn({ fallbackRedirectUrl: `${pathname}` });
     }
     startTransition(async () => {
       setOptimisticWishlist(undefined);
-      await serverAction({ ...payload, userId, pathname });
+      const res = await mainAction({ ...payload, userId });
+      if (res.success && onSuccess) {
+        onSuccess();
+      } else if (!res.success && onError) {
+        onError();
+      }
     });
   };
 

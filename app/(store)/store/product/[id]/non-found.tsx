@@ -1,4 +1,4 @@
-import BodyTemplate from "@/app/Components/BodyTemplate";
+import BodyTemplate from "@/components/server/BodyTemplate";
 
 const NotFoundPage = () => {
   return (
