@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import Footer from "@/components/server/Footer";
 import QueryClientProvider from "./QueryClientProvider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -53,6 +54,7 @@ export default function RootLayout({
             <Footer />
           </ClerkProvider>
         </QueryClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
