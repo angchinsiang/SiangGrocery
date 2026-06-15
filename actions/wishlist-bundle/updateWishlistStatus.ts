@@ -2,14 +2,16 @@
 
 import prisma from "@/lib/prisma";
 import { updateTag } from "next/cache";
+import { enforceRateLimit } from "@/lib/ratelimit-helpers";
+import { generalLimiter } from "@/lib/ratelimit";
 
 export const updateWishlistStatus = async ({
-  userId,
   SKU,
 }: {
-  userId: string;
   SKU: string;
 }) => {
+  const userId = await enforceRateLimit(generalLimiter, "updateWishlist");
+
   try {
     const hasWishlist = await prisma.wishlist.findFirst({
       where: { user_id: userId },

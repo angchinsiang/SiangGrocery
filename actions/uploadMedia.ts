@@ -14,10 +14,10 @@ export const uploadMediaAsset = async (formData: {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized - Not logged in");
 
-  // const isAdmin = await prisma.admin.findUnique({
-  //   where: { id: userId },
-  // });
-  // if (!isAdmin) throw new Error("Unauthorized - Not an admin");
+  const isAdmin = await prisma.admin.findUnique({
+    where: { id: userId },
+  });
+  if (!isAdmin) throw new Error("Unauthorized - Not an admin");
 
   try {
     const fileKey = formData.url.split("/f/")[1];

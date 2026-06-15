@@ -1,19 +1,20 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { setCartCookie } from "@/actions/cookies-bundle/cookieActions";
+import { enforceRateLimit } from "@/lib/ratelimit-helpers";
+import { generalLimiter } from "@/lib/ratelimit";
 
 export async function addToCart({
-  userId,
   SKU,
   pathname,
 }: {
-  userId: string;
   SKU: string;
   pathname: string;
 }) {
+  const userId = await enforceRateLimit(generalLimiter, "addToCart");
+
   try {
     const existingCart = await prisma.cart.findFirst({
       where: { user_id: userId },
@@ -65,10 +66,9 @@ export async function addToCart({
 }
 
 export async function updateCart(quantity: number, SKU: string) {
-  if (quantity - 1 === 0) return quantity;
+  if (quantity < 1 || quantity > 99) return quantity;
 
-  const { userId } = await auth();
-  if (!userId) throw new Error("Invalid User!");
+  const userId = await enforceRateLimit(generalLimiter, "updateCart");
 
   const existingCart = await prisma.cart.findFirst({
     where: { user_id: userId },

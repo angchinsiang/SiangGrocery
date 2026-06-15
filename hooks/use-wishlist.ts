@@ -7,7 +7,7 @@ export function useWishlist<State, Payload>(
   optimisticCallback: (prev: State, payload?: () => void) => State,
   serverAction: {
     mainAction: (
-      payload: Payload & { userId: string },
+      payload: Payload,
     ) => Promise<Record<string, boolean>>;
     options?: { onSuccess?: () => void; onError?: () => void };
   },
@@ -30,7 +30,7 @@ export function useWishlist<State, Payload>(
     }
     startTransition(async () => {
       setOptimisticWishlist(undefined);
-      const res = await mainAction({ ...payload, userId });
+      const res = await mainAction(payload);
       if (res.success && onSuccess) {
         onSuccess();
       } else if (!res.success && onError) {

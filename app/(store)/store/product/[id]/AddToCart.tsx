@@ -2,19 +2,19 @@
 
 import { addToCart } from "@/actions/addToCart";
 import { Button } from "@/components/ui/button";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
 const AddToCart = ({ SKU }: { SKU: string }) => {
-  const session = useUser();
+  const { userId } = useAuth();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const { openSignIn } = useClerk();
 
   const handleCart = async () => {
-    if (!session.user) {
+    if (!userId) {
       return openSignIn({ fallbackRedirectUrl: `${pathname}` });
     }
 
@@ -22,7 +22,6 @@ const AddToCart = ({ SKU }: { SKU: string }) => {
       toast.promise(
         async () =>
           await addToCart({
-            userId: session.user.id,
             SKU,
             pathname,
           }),

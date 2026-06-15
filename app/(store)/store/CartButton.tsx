@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { usePathname } from "next/navigation";
 import { addToCart } from "@/actions/addToCart";
@@ -11,16 +11,15 @@ const CartButton = ({ SKU }: { SKU: string }) => {
   const [isPending, startTransition] = useTransition();
   const { openSignIn } = useClerk();
   const pathname = usePathname();
-  const session = useUser();
+  const { userId } = useAuth();
 
   const handleCart = async () => {
-    if (!session.user) {
+    if (!userId) {
       return openSignIn({ fallbackRedirectUrl: `${pathname}` });
     }
 
     startTransition(async () => {
       await addToCart({
-        userId: session.user.id,
         SKU: SKU,
         pathname: pathname,
       });

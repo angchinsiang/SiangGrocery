@@ -49,7 +49,6 @@ const LikeCommentButton2 = ({
         setOptimisticCommentLike(undefined);
         await updateLike({
           commentId: commentId,
-          userId: userId,
           pathname: pathname,
         });
       });

@@ -4,20 +4,26 @@ import { removeCartItem, updateCartItemQuantity } from "@/app/actions/checkout";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTransition } from "react";
+import type { RefObject } from "react";
 import { OrderItem } from "./ItemManager";
 
 export default function CartItemList({
   items,
   isCart,
   setItems,
+  isCheckingOut,
+  isCheckingOutRef,
 }: {
   items: OrderItem[];
   isCart: boolean;
   setItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
+  isCheckingOut: boolean;
+  isCheckingOutRef: RefObject<boolean>;
 }) {
   const [isPending, startTransition] = useTransition();
 
   const handleUpdateQuantity = (SKU: string, newQuantity: number) => {
+    if (isCheckingOutRef.current) return; // Synchronous guard
     if (newQuantity < 1) return;
 
     // Optimistic update
@@ -41,6 +47,7 @@ export default function CartItemList({
   };
 
   const handleRemove = (SKU: string) => {
+    if (isCheckingOutRef.current) return; // Synchronous guard
     setItems((prev) => prev.filter((item) => item.SKU !== SKU));
     // startTransition(async () => {
     //   if (isCart) {
@@ -87,7 +94,7 @@ export default function CartItemList({
                 onClick={() =>
                   handleUpdateQuantity(item.SKU, item.quantity - 1)
                 }
-                disabled={item.quantity <= 1 || isPending}
+                disabled={item.quantity <= 1 || isPending || isCheckingOut}
                 className="p-2 hover:bg-gray-200 disabled:opacity-50 transition-colors text-green-600 font-bold"
               >
                 <Minus size={16} />
@@ -99,7 +106,7 @@ export default function CartItemList({
                 onClick={() =>
                   handleUpdateQuantity(item.SKU, item.quantity + 1)
                 }
-                disabled={isPending}
+                disabled={isPending || isCheckingOut}
                 className="p-2 hover:bg-gray-200 disabled:opacity-50 transition-colors text-green-600 font-bold"
               >
                 <Plus size={16} />
@@ -108,7 +115,7 @@ export default function CartItemList({
 
             <button
               onClick={() => handleRemove(item.SKU)}
-              disabled={isPending}
+              disabled={isPending || isCheckingOut}
               className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
             >
               <Trash2 size={20} />

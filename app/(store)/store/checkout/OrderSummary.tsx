@@ -1,13 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { createPaymentIntent } from "@/app/actions/checkout";
-import { loadStripe } from "@stripe/stripe-js";
-
-// Make sure to set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_test_placeholder",
-);
+import { useState, useTransition } from "react";
+import StripeCheckoutForm from "./StripeCheckoutForm";
 
 type OrderItem = {
   SKU: string;
@@ -24,12 +19,16 @@ type Coupon = {
 
 export default function OrderSummary({
   items,
+  isCart,
   availableShippingCoupon,
   availableDiscountCoupon,
+  onToggleCheckout,
 }: {
   items: OrderItem[];
+  isCart: boolean;
   availableShippingCoupon?: Coupon[];
   availableDiscountCoupon?: Coupon[];
+  onToggleCheckout: () => void;
 }) {
   const [useShippingCoupon, setUseShippingCoupon] = useState(
     !!availableShippingCoupon,
@@ -39,6 +38,7 @@ export default function OrderSummary({
   );
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const baseShippingFee = 5.0; // Flat rate RM 5.00 or $5.00 for example
@@ -62,32 +62,29 @@ export default function OrderSummary({
     Math.max(0, subtotal - productDiscount) + finalShippingFee + taxAmount;
 
   const handlePay = () => {
+    onToggleCheckout();
     startTransition(async () => {
       setError(null);
       try {
         const response = await createPaymentIntent(
+          items.map((item) => ({ SKU: item.SKU, quantity: item.quantity })),
+          isCart,
           useShippingCoupon ? availableShippingCoupon?.[0].id : undefined,
           useDiscountCoupon ? availableDiscountCoupon?.[0].id : undefined,
         );
 
         if (response.error) {
           setError(response.error);
+          onToggleCheckout();
           return;
         }
 
         if (response.clientSecret) {
-          // In a real app, redirect to a Stripe Elements checkout page
-          // or open a modal with the PaymentElement here.
-          // For now, redirecting to a placeholder success page or
-          // simulating the checkout flow completion.
-          console.log("Client Secret Received:", response.clientSecret);
-          alert(
-            `Payment intent created for ${grandTotal.toFixed(2)}. Proceeding to Stripe...`,
-          );
-          // Example: stripe.confirmPayment(...)
+          setClientSecret(response.clientSecret);
         }
       } catch (err) {
         setError("Failed to initialize payment. Please try again.");
+        onToggleCheckout();
       }
     });
   };
@@ -95,6 +92,22 @@ export default function OrderSummary({
   if (!items || items.length === 0) {
     return null;
   }
+
+  // Phase 2: Show Stripe Payment Element form
+  if (clientSecret) {
+    return (
+      <StripeCheckoutForm
+        clientSecret={clientSecret}
+        amount={grandTotal}
+        onBack={() => {
+          setClientSecret(null);
+          onToggleCheckout();
+        }}
+      />
+    );
+  }
+
+  // Phase 1: Show Order Summary
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Order Details</h2>

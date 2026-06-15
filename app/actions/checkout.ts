@@ -1,22 +1,27 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import Stripe from "stripe";
+import { enforceRateLimit } from "@/lib/ratelimit-helpers";
+import { generalLimiter, writeLimiter } from "@/lib/ratelimit";
+import { redis } from "@/lib/redis";
 
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY || "sk_test_placeholder",
   {
-    apiVersion: "2024-04-10" as any,
+    apiVersion: "2026-05-27.dahlia",
   },
 );
 
 export async function updateCartItemQuantity(SKU: string, newQuantity: number) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
-    if (newQuantity < 1) throw new Error("Invalid quantity");
+    if (newQuantity < 1 || newQuantity > 99)
+      throw new Error("Invalid quantity");
+    const userId = await enforceRateLimit(
+      generalLimiter,
+      "updateCartItemQuantity",
+    );
 
     // Verify ownership
     const cart = await prisma.cart.findFirst({
@@ -47,8 +52,7 @@ export async function updateCartItemQuantity(SKU: string, newQuantity: number) {
 
 export async function removeCartItem(SKU: string) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const userId = await enforceRateLimit(generalLimiter, "removeCartItem");
 
     // Verify ownership
     const cart = await prisma.cart.findFirst({
@@ -77,90 +81,150 @@ export async function removeCartItem(SKU: string) {
 }
 
 export async function createPaymentIntent(
+  skus: { SKU: string; quantity: number }[],
+  isCart: boolean,
   shippingCouponId?: string,
   discountCouponId?: string,
 ) {
-  const { userId } = await auth();
-  if (!userId) return { error: "Unauthorized" };
+  let userId: string;
+  try {
+    userId = await enforceRateLimit(writeLimiter, "createPaymentIntent");
+  } catch {
+    return { error: "Too many requests. Please try again later." };
+  }
 
   try {
-    const cart = await prisma.cart.findUnique({
-      where: { user_id: userId },
+    // Input validation
+    if (!skus || skus.length === 0) {
+      return { error: "No items to checkout." };
+    }
+
+    // SKU Validation — verify all SKUs exist with displayable listed products
+    const skuIds = skus.map((s) => s.SKU);
+    const groceries = await prisma.grocery.findMany({
+      where: { id: { in: skuIds } },
       include: {
-        cartItems: {
-          include: {
-            grocery: {
-              include: {
-                listedProducts: {
-                  where: { isDisplay: true },
-                },
-              },
-            },
-          },
+        listedProducts: {
+          where: { isDisplay: true },
         },
       },
     });
 
-    if (!cart || cart.cartItems.length === 0) {
-      return { error: "Cart is empty" };
+    // Check that every requested SKU was found with a valid listed product
+    const foundSkuIds = new Set(groceries.map((g) => g.id));
+    const missingSKUs = skuIds.filter((id) => !foundSkuIds.has(id));
+    if (missingSKUs.length > 0) {
+      return { error: "One or more items are no longer available." };
     }
 
-    // Server-side recalculation of the total amount
-    let subtotal = 0;
-    for (const item of cart.cartItems) {
-      const product = item.grocery;
-      const listedProduct = product.listedProducts[0];
-      const unitPrice =
-        listedProduct?.discount_price > 0
-          ? listedProduct.discount_price
-          : listedProduct?.original_price || 0;
+    const invalidSKUs = groceries.filter(
+      (g) => g.listedProducts.length === 0,
+    );
+    if (invalidSKUs.length > 0) {
+      return { error: "One or more items are no longer available." };
+    }
 
-      subtotal += unitPrice * item.quantity;
+    // Build a quantity lookup from the client-provided SKUs
+    const quantityMap = new Map(skus.map((s) => [s.SKU, s.quantity]));
+
+    // Server-side recalculation of the total amount from validated groceries
+    let subtotal = 0;
+    for (const grocery of groceries) {
+      const listedProduct = grocery.listedProducts[0];
+      const unitPrice =
+        listedProduct.discount_price > 0
+          ? listedProduct.discount_price
+          : listedProduct.original_price;
+      const quantity = quantityMap.get(grocery.id) || 1;
+      subtotal += unitPrice * quantity;
     }
 
     const baseShippingFee = 5.0; // Constant RM 5.00
     let finalShippingFee = baseShippingFee;
     let productDiscount = 0;
 
-    // Validate Coupons on Server
+    // Validate Coupons on Server — verify ownership through user_coupon table
     if (shippingCouponId) {
-      const shippingCoupon = await prisma.coupon.findUnique({
-        where: { id: shippingCouponId },
+      const userCoupon = await prisma.user_Coupon.findFirst({
+        where: {
+          user_id: userId,
+          coupon_id: shippingCouponId,
+          status: "UNREDEEMED",
+        },
+        include: { coupon: true },
       });
       if (
-        shippingCoupon &&
-        shippingCoupon.status === "ACTIVE" &&
-        shippingCoupon.type === "SHIPPING"
+        userCoupon &&
+        userCoupon.coupon.status === "ACTIVE" &&
+        userCoupon.coupon.type === "SHIPPING"
       ) {
-        finalShippingFee = Math.max(0, baseShippingFee - shippingCoupon.amount);
+        finalShippingFee = Math.max(
+          0,
+          baseShippingFee - userCoupon.coupon.amount,
+        );
+      } else {
+        console.error("Invalid shipping coupon");
+        return { error: "Invalid shipping coupon" };
       }
     }
 
     if (discountCouponId) {
-      const discountCoupon = await prisma.coupon.findUnique({
-        where: { id: discountCouponId },
+      const userCoupon = await prisma.user_Coupon.findFirst({
+        where: {
+          user_id: userId,
+          coupon_id: discountCouponId,
+          status: "UNREDEEMED",
+        },
+        include: { coupon: true },
       });
       if (
-        discountCoupon &&
-        discountCoupon.status === "ACTIVE" &&
-        discountCoupon.type === "DISCOUNT"
+        userCoupon &&
+        userCoupon.coupon.status === "ACTIVE" &&
+        userCoupon.coupon.type === "DISCOUNT"
       ) {
-        productDiscount = discountCoupon.amount;
+        productDiscount = userCoupon.coupon.amount;
+      } else {
+        console.error("Invalid discount coupon");
+        return { error: "Invalid discount coupon" };
       }
     }
 
     const grandTotal =
       Math.max(0, subtotal - productDiscount) + finalShippingFee;
 
+    // Fetch cartId only for cart checkout (needed for webhook cart cleanup)
+    let cartId = "none";
+    if (isCart) {
+      const cart = await prisma.cart.findUnique({
+        where: { user_id: userId },
+        select: { id: true },
+      });
+      if (!cart) {
+        return { error: "Cart not found." };
+      }
+      cartId = cart.id;
+    }
+
     // Create a PaymentIntent with the exact calculated amount
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(grandTotal * 100), // Convert to cents
-      currency: "myr", // Assuming Malaysian Ringgit
+      currency: "myr",
+      automatic_payment_methods: { enabled: true },
       metadata: {
         userId,
-        cartId: cart.id,
+        isCart: String(isCart),
+        cartId,
+        ...(shippingCouponId && { shippingCouponId }),
+        ...(discountCouponId && { discountCouponId }),
       },
     });
+
+    // Store checkout data in Redis for the webhook (no size limit, 24h TTL)
+    await redis.set(
+      `checkout:${paymentIntent.id}`,
+      JSON.stringify({ skus, isCart }),
+      { ex: 86400 },
+    );
 
     return { clientSecret: paymentIntent.client_secret };
   } catch (error: any) {

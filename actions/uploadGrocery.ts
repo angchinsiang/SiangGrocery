@@ -1,26 +1,25 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { GroceryFormData } from "@/lib/schemas";
+import { grocerySchema, type GroceryFormData } from "@/lib/schemas";
 import prisma from "@/lib/prisma";
 import { Media_Type } from "@/lib/generated/prisma";
+import { enforceRateLimit } from "@/lib/ratelimit-helpers";
+import { writeLimiter } from "@/lib/ratelimit";
 
-export async function uploadGrocery({
-  name,
-  description,
-  mediaURL,
-  category,
-  form,
-  mou: MoU,
-  isPromotion,
-  expiryDate,
-  status,
-  country,
-}: GroceryFormData) {
-  const user = await auth();
-  if (!user) {
-    throw new Error("Unauthorized - Not logged in");
+export async function uploadGrocery(rawData: GroceryFormData) {
+  const userId = await enforceRateLimit(writeLimiter, "uploadGrocery");
+
+  // Admin authorization check
+  const isAdmin = await prisma.admin.findUnique({
+    where: { id: userId },
+  });
+  if (!isAdmin) {
+    throw new Error("Unauthorized - Not an admin");
   }
+
+  // Validate input with Zod
+  const { name, description, mediaURL, category, form, mou: MoU, isPromotion, expiryDate, status, country } =
+    grocerySchema.parse(rawData);
 
   try {
     const grocery = await prisma.grocery.create({
