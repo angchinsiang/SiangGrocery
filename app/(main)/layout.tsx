@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Footer from "@/components/server/Footer";
 import QueryClientProvider from "./QueryClientProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -55,6 +56,7 @@ export default function RootLayout({
           </ClerkProvider>
         </QueryClientProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
