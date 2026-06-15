@@ -8,6 +8,7 @@ import NavBar from "./NavBar";
 import Footer from "@/components/server/Footer";
 import QueryClientProvider from "./QueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -56,6 +57,7 @@ export default function RootLayout({
           </ClerkProvider>
         </QueryClientProvider>
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
