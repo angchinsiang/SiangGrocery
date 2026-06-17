@@ -23,8 +23,8 @@ const ItemManager = ({
 }: {
   initialItems: OrderItem[];
   isCart: boolean;
-  shippingCoupon?: Coupon[];
-  discountCoupon?: Coupon[];
+  shippingCoupon: Coupon[];
+  discountCoupon: Coupon[];
 }) => {
   const [items, setItems] = useState(initialItems);
   const [isCheckingOut, setIsCheckingOut] = useState(false);

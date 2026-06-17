@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
             total_amount: paymentIntent.amount / 100, // Convert from cents
             payment_method: mappedPaymentMethod,
             status: "PENDING",
-            deliveryStatus: "PENDING",
+            deliveryStatus: "WAITING_FOR_PAYMENT",
             ...(couponIds.length > 0 && {
               coupons: {
                 connect: couponIds.map((id) => ({ id })),
@@ -216,9 +216,7 @@ export async function POST(req: NextRequest) {
     const orderTicketId = paymentIntent.metadata.orderTicketId;
 
     if (!orderTicketId) {
-      console.error(
-        "payment_intent.succeeded missing orderTicketId in metadata",
-      );
+      console.error(`${event.type} missing orderTicketId in metadata`);
       return NextResponse.json({ received: true });
     }
 
@@ -236,6 +234,33 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error(
         `Failed to update Order ${orderTicketId} on payment success:`,
+        err,
+      );
+    }
+  } else if (
+    event.type === "payment_intent.payment_failed" ||
+    event.type === "payment_intent.canceled"
+  ) {
+    const orderTicketId = paymentIntent.metadata.orderTicketId;
+    if (!orderTicketId) {
+      console.error(`${event.type} missing orderTicketId in metadata`);
+      return NextResponse.json({ received: true });
+    }
+
+    try {
+      await prisma.order_Ticket.update({
+        where: {
+          id: orderTicketId,
+        },
+        data: {
+          status: "CANCELLED",
+          deliveryStatus: "CANCELLED",
+        },
+      });
+      console.log(`Order ${orderTicketId} marked as cancelled.`);
+    } catch (err) {
+      console.error(
+        `Failed to update Order ${orderTicketId} on payment ${event.type}:`,
         err,
       );
     }

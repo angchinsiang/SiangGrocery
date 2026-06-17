@@ -1,6 +1,9 @@
 "use client";
 
-import { createPaymentIntent } from "@/app/actions/checkout";
+import {
+  cancelPaymentIntent,
+  createPaymentIntent,
+} from "@/app/actions/checkout";
 import { useState, useTransition } from "react";
 import StripeCheckoutForm from "./StripeCheckoutForm";
 
@@ -26,8 +29,8 @@ export default function OrderSummary({
 }: {
   items: OrderItem[];
   isCart: boolean;
-  availableShippingCoupon?: Coupon[];
-  availableDiscountCoupon?: Coupon[];
+  availableShippingCoupon: Coupon[];
+  availableDiscountCoupon: Coupon[];
   onToggleCheckout: () => void;
 }) {
   const [useShippingCoupon, setUseShippingCoupon] = useState(
@@ -39,18 +42,19 @@ export default function OrderSummary({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const baseShippingFee = 5.0; // Flat rate RM 5.00 or $5.00 for example
 
   const shippingDiscount =
-    useShippingCoupon && availableShippingCoupon
-      ? Math.min(availableShippingCoupon[0].amount, baseShippingFee)
+    useShippingCoupon && availableShippingCoupon.length > 0
+      ? availableShippingCoupon[0].amount
       : 0;
-  const finalShippingFee = baseShippingFee - shippingDiscount;
+  const finalShippingFee = Math.max(0, baseShippingFee - shippingDiscount);
 
   const productDiscount =
-    useDiscountCoupon && availableDiscountCoupon
+    useDiscountCoupon && availableDiscountCoupon.length > 0
       ? availableDiscountCoupon[0].amount
       : 0;
 
@@ -69,8 +73,16 @@ export default function OrderSummary({
         const response = await createPaymentIntent(
           items.map((item) => ({ SKU: item.SKU, quantity: item.quantity })),
           isCart,
-          useShippingCoupon ? availableShippingCoupon?.[0].id : undefined,
-          useDiscountCoupon ? availableDiscountCoupon?.[0].id : undefined,
+          useShippingCoupon
+            ? availableShippingCoupon.length > 0
+              ? availableShippingCoupon[0].id
+              : undefined
+            : undefined,
+          useDiscountCoupon
+            ? availableDiscountCoupon.length > 0
+              ? availableDiscountCoupon[0].id
+              : undefined
+            : undefined,
         );
 
         if (response.error) {
@@ -79,8 +91,9 @@ export default function OrderSummary({
           return;
         }
 
-        if (response.clientSecret) {
+        if (response.clientSecret && response.paymentId) {
           setClientSecret(response.clientSecret);
+          setPaymentId(response.paymentId);
         }
       } catch (err) {
         setError("Failed to initialize payment. Please try again.");
@@ -89,20 +102,32 @@ export default function OrderSummary({
     });
   };
 
+  const handleCancel = (paymentId: string) => {
+    startTransition(async () => {
+      const response = await cancelPaymentIntent(paymentId);
+
+      if (response.error) {
+        setError(response.error);
+        onToggleCheckout();
+        return;
+      }
+      setClientSecret(null);
+      setPaymentId(null);
+      onToggleCheckout();
+    });
+  };
+
   if (!items || items.length === 0) {
     return null;
   }
 
   // Phase 2: Show Stripe Payment Element form
-  if (clientSecret) {
+  if (clientSecret && paymentId) {
     return (
       <StripeCheckoutForm
         clientSecret={clientSecret}
         amount={grandTotal}
-        onBack={() => {
-          setClientSecret(null);
-          onToggleCheckout();
-        }}
+        onBack={() => handleCancel(paymentId)}
       />
     );
   }
@@ -132,7 +157,7 @@ export default function OrderSummary({
         <div className="flex justify-between items-center text-gray-600">
           <div className="flex flex-col">
             <span>Shipping Fee</span>
-            {availableShippingCoupon && (
+            {availableShippingCoupon.length > 0 && (
               <label className="text-xs text-blue-600 flex items-center gap-1 mt-1 cursor-pointer">
                 <input
                   type="checkbox"
@@ -140,7 +165,11 @@ export default function OrderSummary({
                   onChange={(e) => setUseShippingCoupon(e.target.checked)}
                   className="rounded text-blue-600"
                 />
-                Apply Shipping Coupon (-${availableShippingCoupon?.[0].amount})
+                Apply Shipping Coupon (-$
+                {availableShippingCoupon.length > 0
+                  ? availableShippingCoupon[0].amount
+                  : 0}
+                )
               </label>
             )}
           </div>
@@ -150,7 +179,7 @@ export default function OrderSummary({
         <div className="flex justify-between items-center text-gray-600">
           <div className="flex flex-col">
             <span>Discount</span>
-            {availableDiscountCoupon && (
+            {availableDiscountCoupon.length > 0 && (
               <label className="text-xs text-blue-600 flex items-center gap-1 mt-1 cursor-pointer">
                 <input
                   type="checkbox"
@@ -158,7 +187,11 @@ export default function OrderSummary({
                   onChange={(e) => setUseDiscountCoupon(e.target.checked)}
                   className="rounded text-blue-600"
                 />
-                Apply Product Coupon (-${availableDiscountCoupon?.[0].amount})
+                Apply Product Coupon (-$
+                {availableDiscountCoupon.length > 0
+                  ? availableDiscountCoupon[0].amount
+                  : 0}
+                )
               </label>
             )}
           </div>

@@ -117,9 +117,7 @@ export async function createPaymentIntent(
       return { error: "One or more items are no longer available." };
     }
 
-    const invalidSKUs = groceries.filter(
-      (g) => g.listedProducts.length === 0,
-    );
+    const invalidSKUs = groceries.filter((g) => g.listedProducts.length === 0);
     if (invalidSKUs.length > 0) {
       return { error: "One or more items are no longer available." };
     }
@@ -226,9 +224,32 @@ export async function createPaymentIntent(
       { ex: 86400 },
     );
 
-    return { clientSecret: paymentIntent.client_secret };
+    return {
+      paymentId: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+    };
   } catch (error: any) {
     console.error("Payment intent error:", error);
     return { error: "Failed to process payment setup." };
+  }
+}
+
+export async function cancelPaymentIntent(paymentId: string) {
+  try {
+    const userId = await enforceRateLimit(writeLimiter, "cancelPaymentIntent");
+  } catch (error: any) {
+    return { error: "Too many requests. Please try again later." };
+  }
+
+  try {
+    await Promise.all([
+      stripe.paymentIntents.cancel(paymentId),
+      redis.del(`checkout:${paymentId}`),
+    ]);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Payment intent error:", error);
+    return { error: "Failed to cancel payment setup." };
   }
 }
