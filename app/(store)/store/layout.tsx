@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Itim, Henny_Penny } from "next/font/google";
 import "../../globals.css";
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import NavBar from "./NavBar";
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body
         className={`${itim.variable} ${inter.variable} ${hennyPenny.variable} antialiased`}
       >
+        <SpeedInsights />
         <QueryClientProvider>
           <ClerkProvider>
             <NavBar />

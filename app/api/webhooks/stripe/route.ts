@@ -11,7 +11,10 @@ const stripe = new Stripe(
   },
 );
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const webhookSecret: string | undefined =
+  process.env.NODE_ENV === "development"
+    ? "whsec_bae5d1b5e2bf3cafc17778a3b9d00bca3dd4574dc7c85cdd9799f02f66d4ba6d"
+    : process.env.STRIPE_WEBHOOK_SECRET;
 
 type CheckoutData = {
   skus: { SKU: string; quantity: number }[];
@@ -42,12 +45,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+  const paymentIntent = event.data.object as Stripe.PaymentIntent;
+  const { userId, cartId, isCart, shippingCouponId, discountCouponId } =
+    paymentIntent.metadata;
 
-    const { userId, cartId, isCart, shippingCouponId, discountCouponId } =
-      paymentIntent.metadata;
-
+  if (event.type === "payment_intent.created") {
     if (!userId) {
       console.error("Missing userId in PaymentIntent metadata");
       return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
@@ -89,21 +91,39 @@ export async function POST(req: NextRequest) {
       });
 
       // Create Order_Ticket and Grocery_Order entries in a transaction
-      const orderTicketId = randomUUID();
 
       // Collect coupon IDs to connect
       const couponIds: string[] = [];
       if (shippingCouponId) couponIds.push(shippingCouponId);
       if (discountCouponId) couponIds.push(discountCouponId);
 
+      // Determine the payment method from Stripe's payment_method_types array
+      const pmTypes = paymentIntent.payment_method_types || [];
+      let mappedPaymentMethod: "CARD" | "FPX" | "EWALLET" | "COD" = "CARD"; // default
+
+      if (pmTypes.includes("fpx")) {
+        mappedPaymentMethod = "FPX";
+      } else if (
+        pmTypes.some((type) =>
+          ["grabpay", "alipay", "wechat_pay", "boost", "touch_n_go"].includes(
+            type,
+          ),
+        )
+      ) {
+        mappedPaymentMethod = "EWALLET";
+      } else if (pmTypes.includes("card")) {
+        mappedPaymentMethod = "CARD";
+      }
+
+      let orderTicketId = "";
+
       await prisma.$transaction(async (tx) => {
         // 1. Create the Order_Ticket
-        await tx.order_Ticket.create({
+        const newOrder = await tx.order_Ticket.create({
           data: {
-            id: orderTicketId,
             user_id: userId,
             total_amount: paymentIntent.amount / 100, // Convert from cents
-            payment_method: "CARD",
+            payment_method: mappedPaymentMethod,
             status: "PENDING",
             deliveryStatus: "PENDING",
             ...(couponIds.length > 0 && {
@@ -113,6 +133,8 @@ export async function POST(req: NextRequest) {
             }),
           },
         });
+
+        orderTicketId = newOrder.id;
 
         // 2. Create Grocery_Order entries from the checkout SKU data
         for (const grocery of groceries) {
@@ -127,7 +149,6 @@ export async function POST(req: NextRequest) {
 
           await tx.grocery_Order.create({
             data: {
-              id: randomUUID(),
               ot_id: orderTicketId,
               lp_id: listedProduct.id,
               quantity,
@@ -151,7 +172,6 @@ export async function POST(req: NextRequest) {
 
           await tx.coupon_Usage_History.create({
             data: {
-              id: randomUUID(),
               user_id: userId,
               coupon_id: couponId,
               ot_id: orderTicketId,
@@ -174,6 +194,14 @@ export async function POST(req: NextRequest) {
       // 5. Clean up Redis checkout data
       await redis.del(`checkout:${paymentIntent.id}`);
 
+      // 6. Update PaymentIntent with the generated orderTicketId so we can reference it in payment_intent.succeeded
+      await stripe.paymentIntents.update(paymentIntent.id, {
+        metadata: {
+          ...paymentIntent.metadata,
+          orderTicketId,
+        },
+      });
+
       console.log(
         `Order ${orderTicketId} created for user ${userId}, isCart: ${isCart}, amount: RM ${(paymentIntent.amount / 100).toFixed(2)}`,
       );
@@ -182,6 +210,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Failed to create order" },
         { status: 500 },
+      );
+    }
+  } else if (event.type === "payment_intent.succeeded") {
+    const orderTicketId = paymentIntent.metadata.orderTicketId;
+
+    if (!orderTicketId) {
+      console.error(
+        "payment_intent.succeeded missing orderTicketId in metadata",
+      );
+      return NextResponse.json({ received: true });
+    }
+
+    try {
+      await prisma.order_Ticket.update({
+        where: {
+          id: orderTicketId,
+        },
+        data: {
+          status: "COMPLETED",
+          deliveryStatus: "PENDING",
+        },
+      });
+      console.log(`Order ${orderTicketId} marked as successfully paid.`);
+    } catch (err) {
+      console.error(
+        `Failed to update Order ${orderTicketId} on payment success:`,
+        err,
       );
     }
   }

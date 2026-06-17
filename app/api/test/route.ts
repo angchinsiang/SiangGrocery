@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server';
-import { infiniteGrocery } from '@/actions/more-section/infiniteGrocery';
+import { NextResponse } from "next/server";
 
 export const GET = async () => {
   try {
-    const res = await infiniteGrocery({});
-    return NextResponse.json(res);
+    const res = { testing: "successful" };
+    return NextResponse.json(res, { status: 200 });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message, stack: e.stack }, { status: 500 });
+    return NextResponse.json(
+      { error: e.message, stack: e.stack },
+      { status: 500 },
+    );
   }
-}
+};
