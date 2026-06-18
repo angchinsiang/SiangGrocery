@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Elements,
   PaymentElement,
@@ -16,14 +16,44 @@ const stripePromise = loadStripe(
 function CheckoutForm({
   amount,
   onBack,
+  expiresAt,
 }: {
   amount: number;
   onBack: () => void;
+  expiresAt: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const remaining = expiresAt - Math.floor(Date.now() / 1000);
+    return Math.max(0, remaining);
+  });
+
+  const handleExpiry = useCallback(() => {
+    setErrorMessage("Payment session expired. Please try again.");
+    // Small delay so user can see the message before redirecting back
+    setTimeout(() => onBack(), 2000);
+  }, [onBack]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const remaining = expiresAt - Math.floor(Date.now() / 1000);
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        clearInterval(interval);
+        handleExpiry();
+      } else {
+        setTimeLeft(remaining);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt, handleExpiry]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +86,33 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Countdown Timer */}
+      <div
+        className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-medium ${
+          timeLeft <= 60
+            ? "bg-red-50 text-red-700 border border-red-200"
+            : "bg-amber-50 text-amber-700 border border-amber-200"
+        }`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>
+          Time remaining: {minutes}:{seconds.toString().padStart(2, "0")}
+        </span>
+      </div>
+
       <PaymentElement
         options={{
           layout: "tabs",
@@ -71,7 +128,7 @@ function CheckoutForm({
       <div className="flex flex-col gap-3">
         <button
           type="submit"
-          disabled={isProcessing || !stripe || !elements}
+          disabled={isProcessing || !stripe || !elements || timeLeft <= 0}
           className="w-full bg-[#f8b878] hover:bg-[#f0a860] text-gray-900 font-bold py-4 rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isProcessing ? (
@@ -120,10 +177,12 @@ export default function StripeCheckoutForm({
   clientSecret,
   amount,
   onBack,
+  expiresAt,
 }: {
   clientSecret: string;
   amount: number;
   onBack: () => void;
+  expiresAt: number;
 }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -170,7 +229,7 @@ export default function StripeCheckoutForm({
           },
         }}
       >
-        <CheckoutForm amount={amount} onBack={onBack} />
+        <CheckoutForm amount={amount} onBack={onBack} expiresAt={expiresAt} />
       </Elements>
     </div>
   );

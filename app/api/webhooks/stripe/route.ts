@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+import stripe from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
-import { randomUUID } from "crypto";
-
-const stripe = new Stripe(
-  process.env.STRIPE_SECRET_KEY || "sk_test_placeholder",
-  {
-    apiVersion: "2026-05-27.dahlia",
-  },
-);
+import { Stripe } from "stripe";
 
 const webhookSecret: string | undefined =
   process.env.NODE_ENV === "development"
@@ -248,6 +241,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+      // 1. Mark the order as cancelled
       await prisma.order_Ticket.update({
         where: {
           id: orderTicketId,
@@ -257,7 +251,40 @@ export async function POST(req: NextRequest) {
           deliveryStatus: "CANCELLED",
         },
       });
-      console.log(`Order ${orderTicketId} marked as cancelled.`);
+
+      // 2. Reverse coupon redemptions so user can re-use them
+      const couponIds: string[] = [];
+      if (shippingCouponId) couponIds.push(shippingCouponId);
+      if (discountCouponId) couponIds.push(discountCouponId);
+
+      if (userId && couponIds.length > 0) {
+        for (const couponId of couponIds) {
+          await prisma.user_Coupon.updateMany({
+            where: {
+              user_id: userId,
+              coupon_id: couponId,
+              status: "REDEEMED",
+            },
+            data: {
+              status: "UNREDEEMED",
+            },
+          });
+        }
+
+        // Remove usage history for this cancelled order
+        await prisma.coupon_Usage_History.deleteMany({
+          where: {
+            ot_id: orderTicketId,
+          },
+        });
+      }
+
+      // 3. Clean up Redis checkout data (may already be expired by TTL)
+      await redis.del(`checkout:${paymentIntent.id}`);
+
+      console.log(
+        `Order ${orderTicketId} cancelled (${event.type}), coupons reversed, Redis cleaned up.`,
+      );
     } catch (err) {
       console.error(
         `Failed to update Order ${orderTicketId} on payment ${event.type}:`,

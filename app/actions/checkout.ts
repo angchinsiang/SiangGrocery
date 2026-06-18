@@ -6,6 +6,7 @@ import Stripe from "stripe";
 import { enforceRateLimit } from "@/lib/ratelimit-helpers";
 import { generalLimiter, writeLimiter } from "@/lib/ratelimit";
 import { redis } from "@/lib/redis";
+import { cancelCheckout } from "./_checkout";
 
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY || "sk_test_placeholder",
@@ -204,6 +205,10 @@ export async function createPaymentIntent(
     }
 
     // Create a PaymentIntent with the exact calculated amount
+    // Auto-cancel after 5 minutes (300 seconds)
+    const PAYMENT_TTL_SECONDS = 300;
+    const expiresAt = Math.floor(Date.now() / 1000) + PAYMENT_TTL_SECONDS;
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(grandTotal * 100), // Convert to cents
       currency: "myr",
@@ -217,16 +222,28 @@ export async function createPaymentIntent(
       },
     });
 
-    // Store checkout data in Redis for the webhook (no size limit, 24h TTL)
+    // Store checkout data in Redis for the webhook (5 min TTL matching payment window)
     await redis.set(
       `checkout:${paymentIntent.id}`,
       JSON.stringify({ skus, isCart }),
-      { ex: 86400 },
+      { ex: PAYMENT_TTL_SECONDS },
     );
+
+    // Schedule server-side auto-cancellation as a safety net
+    // This fires after 5 minutes — if the PI is already paid, the endpoint will skip cancellation
+
+    setTimeout(async () => {
+      try {
+        await cancelPaymentIntent(paymentIntent.id);
+      } catch (err) {
+        console.error(`Failed to auto-cancel PI ${paymentIntent.id}:`, err);
+      }
+    }, PAYMENT_TTL_SECONDS * 1000);
 
     return {
       paymentId: paymentIntent.id,
       clientSecret: paymentIntent.client_secret,
+      expiresAt, // Unix timestamp (seconds) for client countdown
     };
   } catch (error: any) {
     console.error("Payment intent error:", error);
@@ -241,15 +258,5 @@ export async function cancelPaymentIntent(paymentId: string) {
     return { error: "Too many requests. Please try again later." };
   }
 
-  try {
-    await Promise.all([
-      stripe.paymentIntents.cancel(paymentId),
-      redis.del(`checkout:${paymentId}`),
-    ]);
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Payment intent error:", error);
-    return { error: "Failed to cancel payment setup." };
-  }
+  return cancelCheckout(paymentId);
 }

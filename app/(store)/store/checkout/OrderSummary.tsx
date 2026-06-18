@@ -43,6 +43,7 @@ export default function OrderSummary({
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const baseShippingFee = 5.0; // Flat rate RM 5.00 or $5.00 for example
@@ -94,6 +95,7 @@ export default function OrderSummary({
         if (response.clientSecret && response.paymentId) {
           setClientSecret(response.clientSecret);
           setPaymentId(response.paymentId);
+          setExpiresAt(response.expiresAt);
         }
       } catch (err) {
         setError("Failed to initialize payment. Please try again.");
@@ -113,6 +115,7 @@ export default function OrderSummary({
       }
       setClientSecret(null);
       setPaymentId(null);
+      setExpiresAt(null);
       onToggleCheckout();
     });
   };
@@ -122,12 +125,13 @@ export default function OrderSummary({
   }
 
   // Phase 2: Show Stripe Payment Element form
-  if (clientSecret && paymentId) {
+  if (clientSecret && paymentId && expiresAt) {
     return (
       <StripeCheckoutForm
         clientSecret={clientSecret}
         amount={grandTotal}
         onBack={() => handleCancel(paymentId)}
+        expiresAt={expiresAt}
       />
     );
   }
