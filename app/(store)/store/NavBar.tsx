@@ -13,6 +13,7 @@ import { Show, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { MdOutlineShoppingCart } from "react-icons/md";
+import SearchBar from "./SearchBar";
 
 const NavBar = async () => {
   const sessionUser = await currentUser();
@@ -20,17 +21,18 @@ const NavBar = async () => {
   const image = sessionUser?.imageUrl || "https://github.com/shadcn.png";
 
   return (
-    <nav className="w-full p-3 ring-2">
-      <div className="flex justify-around">
+    <nav className="w-full p-3 ring-2 fixed z-[9999] bg-white">
+      <div className="flex justify-around items-center">
         <Link href="/store" className="font-bold text-2xl">
           Siang Grocery
         </Link>
-        <div className="flex gap-10 items-center">
+        <div className="flex w-fit gap-[2.5em] px-[1em] items-center text-xs cursor-pointer">
           <Link href="/store">All Products</Link>
           <Link href="/store/new-arrivals">New Arrivals</Link>
           <Link href="/store/recently-popular">Recently Popular</Link>
           <Link href="/store/order-tracking">Order Tracking</Link>
-        </div>
+        </div>  
+        <SearchBar />
         <div className="flex gap-3 items-center">
           <Link href="/store/cart">
             <MdOutlineShoppingCart size={28} />

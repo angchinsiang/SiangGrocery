@@ -6,7 +6,7 @@ import Stripe from "stripe";
 import { enforceRateLimit } from "@/lib/ratelimit-helpers";
 import { generalLimiter, writeLimiter } from "@/lib/ratelimit";
 import { redis } from "@/lib/redis";
-import { cancelCheckout } from "./_checkout";
+import { cancelCheckout } from "@/lib/stripe";
 
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY || "sk_test_placeholder",

@@ -53,7 +53,7 @@ export default function RootLayout({
         <QueryClientProvider>
           <ClerkProvider>
             <NavBar />
-            <main>{children}</main>
+            <main className="pt-[4rem]">{children}</main>
             <Footer />
           </ClerkProvider>
         </QueryClientProvider>
