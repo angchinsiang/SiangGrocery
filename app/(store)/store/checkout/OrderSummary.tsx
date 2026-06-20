@@ -6,6 +6,8 @@ import {
 } from "@/app/actions/checkout";
 import { useState, useTransition } from "react";
 import StripeCheckoutForm from "./StripeCheckoutForm";
+import { Address } from "@/lib/generated/prisma";
+import Link from "next/link";
 
 type OrderItem = {
   SKU: string;
@@ -25,12 +27,14 @@ export default function OrderSummary({
   isCart,
   availableShippingCoupon,
   availableDiscountCoupon,
+  userAddresses,
   onToggleCheckout,
 }: {
   items: OrderItem[];
   isCart: boolean;
   availableShippingCoupon: Coupon[];
   availableDiscountCoupon: Coupon[];
+  userAddresses: Address[];
   onToggleCheckout: () => void;
 }) {
   const [useShippingCoupon, setUseShippingCoupon] = useState(
@@ -38,6 +42,10 @@ export default function OrderSummary({
   );
   const [useDiscountCoupon, setUseDiscountCoupon] = useState(
     !!availableDiscountCoupon,
+  );
+  // Default to first address or empty string if none available
+  const [selectedAddressId, setSelectedAddressId] = useState(
+    userAddresses.length > 0 ? userAddresses[0].id : "",
   );
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +75,17 @@ export default function OrderSummary({
     Math.max(0, subtotal - productDiscount) + finalShippingFee + taxAmount;
 
   const handlePay = () => {
+    if (!selectedAddressId) {
+      setError("Please select a delivery address to proceed.");
+      return;
+    }
+    
+    // Find full address string format
+    const addressObj = userAddresses.find((a) => a.id === selectedAddressId);
+    const fullAddressString = addressObj 
+      ? `${addressObj.street}, ${addressObj.city}, ${addressObj.state} ${addressObj.postalCode}, ${addressObj.country}`
+      : "No address provided";
+
     onToggleCheckout();
     startTransition(async () => {
       setError(null);
@@ -84,6 +103,7 @@ export default function OrderSummary({
               ? availableDiscountCoupon[0].id
               : undefined
             : undefined,
+          fullAddressString // Pass the newly required address string
         );
 
         if (response.error) {
@@ -139,6 +159,32 @@ export default function OrderSummary({
   // Phase 1: Show Order Summary
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Delivery Details</h2>
+
+      {/* Address Selection Dropdown */}
+      <div className="mb-6 pb-6 border-b border-gray-100">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Delivery Address
+        </label>
+        {userAddresses.length > 0 ? (
+          <select
+            value={selectedAddressId}
+            onChange={(e) => setSelectedAddressId(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#f8b878] focus:border-[#f8b878] outline-none"
+          >
+            {userAddresses.map((address) => (
+              <option key={address.id} value={address.id}>
+                {address.street}, {address.city}, {address.state} {address.postalCode}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+            No saved addresses found. <Link href="/store/profile" className="font-bold underline hover:text-amber-800">Add an address in your profile</Link> before checking out.
+          </div>
+        )}
+      </div>
+
       <h2 className="text-xl font-bold text-gray-900 mb-6">Order Details</h2>
 
       <div className="space-y-4 mb-6 text-sm">

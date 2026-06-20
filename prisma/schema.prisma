@@ -197,15 +197,16 @@ enum Coupon_Status {
 }
 
 model Order_Ticket {
-  id             String          @id @default(uuid())
-  user_id        String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  completed_At   DateTime?
-  status         Purchase_Status @default(PENDING)
-  deliveryStatus Delivery_Status @default(WAITING_FOR_PAYMENT)
-  total_amount   Float
-  payment_method Payment_Method
+  id               String          @id @default(uuid())
+  user_id          String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  completed_At     DateTime?
+  status           Purchase_Status @default(PENDING)
+  deliveryStatus   Delivery_Status @default(WAITING_FOR_PAYMENT)
+  total_amount     Float
+  payment_method   Payment_Method
+  delivery_address String?
 
   groceryOrders Grocery_Order[]
   coupons       Coupon[]

@@ -12,6 +12,14 @@ const webhookSecret: string | undefined =
 type CheckoutData = {
   skus: { SKU: string; quantity: number }[];
   isCart: boolean;
+  deliveryAddress?: string;
+};
+
+type GroceryOrder = {
+  ot_id: string;
+  lp_id: string;
+  quantity: number;
+  price: number;
 };
 
 export async function POST(req: NextRequest) {
@@ -69,7 +77,7 @@ export async function POST(req: NextRequest) {
           ? JSON.parse(rawCheckoutData)
           : rawCheckoutData;
 
-      const { skus } = checkoutData;
+      const { skus, deliveryAddress } = checkoutData;
       const skuIds = skus.map((s) => s.SKU);
       const quantityMap = new Map(skus.map((s) => [s.SKU, s.quantity]));
 
@@ -119,6 +127,7 @@ export async function POST(req: NextRequest) {
             payment_method: mappedPaymentMethod,
             status: "PENDING",
             deliveryStatus: "WAITING_FOR_PAYMENT",
+            delivery_address: deliveryAddress,
             ...(couponIds.length > 0 && {
               coupons: {
                 connect: couponIds.map((id) => ({ id })),
@@ -130,32 +139,42 @@ export async function POST(req: NextRequest) {
         orderTicketId = newOrder.id;
 
         // 2. Create Grocery_Order entries from the checkout SKU data
-        for (const grocery of groceries) {
-          const listedProduct = grocery.listedProducts[0];
-          if (!listedProduct) continue;
 
-          const unitPrice =
-            listedProduct.discount_price > 0
-              ? listedProduct.discount_price
-              : listedProduct.original_price;
-          const quantity = quantityMap.get(grocery.id) || 1;
+        const groceryOrders = groceries.reduce(
+          (acc: GroceryOrder[], grocery) => {
+            const listedProduct = grocery.listedProducts[0];
+            if (listedProduct) {
+              const unitPrice =
+                listedProduct.discount_price > 0
+                  ? listedProduct.discount_price
+                  : listedProduct.original_price;
+              const quantity = quantityMap.get(grocery.id) || 1;
 
-          await tx.grocery_Order.create({
-            data: {
-              ot_id: orderTicketId,
-              lp_id: listedProduct.id,
-              quantity,
-              price: unitPrice * quantity,
-            },
+              acc.push({
+                ot_id: orderTicketId,
+                lp_id: listedProduct.id,
+                quantity,
+                price: unitPrice * quantity,
+              });
+            }
+            return acc;
+          },
+          [],
+        );
+
+        if (groceryOrders.length > 0) {
+          await tx.grocery_Order.createMany({
+            data: groceryOrders,
           });
         }
 
         // 3. Mark used coupons as REDEEMED and create usage history
-        for (const couponId of couponIds) {
+        if (couponIds.length > 0) {
+          // Send ONE query to update all applicable coupons
           await tx.user_Coupon.updateMany({
             where: {
               user_id: userId,
-              coupon_id: couponId,
+              coupon_id: { in: couponIds }, // Use the 'in' operator!
               status: "UNREDEEMED",
             },
             data: {
@@ -163,12 +182,14 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          await tx.coupon_Usage_History.create({
-            data: {
-              user_id: userId,
-              coupon_id: couponId,
-              ot_id: orderTicketId,
-            },
+          const couponHistoryData = couponIds.map((couponId) => ({
+            user_id: userId,
+            coupon_id: couponId,
+            ot_id: orderTicketId,
+          }));
+
+          await tx.coupon_Usage_History.createMany({
+            data: couponHistoryData,
           });
         }
 
@@ -277,6 +298,49 @@ export async function POST(req: NextRequest) {
             ot_id: orderTicketId,
           },
         });
+      }
+
+      // Restore cart items using the skus from the failed order
+      // We can fetch the cancelled items from Grocery_Order directly
+      const cancelledItems = await prisma.grocery_Order.findMany({
+        where: { ot_id: orderTicketId },
+        include: {
+          listed_product: { include: { grocery: true } },
+        },
+      });
+
+      const availableCancelItem = cancelledItems.filter(
+        (item) => item.listed_product?.isDisplay,
+      );
+
+      if (availableCancelItem.length > 0 && userId) {
+        // Upsert cart
+        const cart = await prisma.cart.upsert({
+          where: { user_id: userId },
+          create: { user_id: userId },
+          update: { lastSeen: new Date() },
+        });
+
+        // Add items back
+        const upsertQueries = availableCancelItem.map((item) => {
+          const sku = item.listed_product?.grocery.id;
+
+          return prisma.cart_Item.upsert({
+            where: { cart_id_SKU: { cart_id: cart.id, SKU: sku } },
+            create: {
+              cart_id: cart.id,
+              SKU: sku,
+              quantity: item.quantity,
+              status: "ACTIVE",
+            },
+            update: {
+              quantity: { increment: item.quantity },
+              status: "ACTIVE",
+            },
+          });
+        });
+
+        await prisma.$transaction(upsertQueries);
       }
 
       // 3. Clean up Redis checkout data (may already be expired by TTL)

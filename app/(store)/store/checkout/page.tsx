@@ -98,6 +98,12 @@ export default async function CheckoutPage() {
     };
   });
 
+  // 4. Fetch the user's saved addresses
+  const userAddresses = await prisma.address.findMany({
+    where: { user_id: userId },
+    orderBy: { isDefault: "desc" },
+  });
+
   return (
     // <BodyTemplate>
     <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -110,6 +116,7 @@ export default async function CheckoutPage() {
           isCart={singleProduct && singleProduct.length > 0 ? false : true}
           shippingCoupon={shippingCoupon}
           discountCoupon={discountCoupon}
+          userAddresses={userAddresses}
         />
       </div>
     </main>

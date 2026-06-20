@@ -1,6 +1,6 @@
 "use client";
 
-import { Coupon } from "@/lib/generated/prisma";
+import { Address, Coupon } from "@/lib/generated/prisma";
 import { useRef, useState } from "react";
 import CartItemList from "./CartItemList";
 import OrderSummary from "./OrderSummary";
@@ -20,11 +20,13 @@ const ItemManager = ({
   isCart,
   shippingCoupon,
   discountCoupon,
+  userAddresses,
 }: {
   initialItems: OrderItem[];
   isCart: boolean;
   shippingCoupon: Coupon[];
   discountCoupon: Coupon[];
+  userAddresses: Address[];
 }) => {
   const [items, setItems] = useState(initialItems);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -60,6 +62,7 @@ const ItemManager = ({
           isCart={isCart}
           availableShippingCoupon={shippingCoupon}
           availableDiscountCoupon={discountCoupon}
+          userAddresses={userAddresses}
           onToggleCheckout={toggleCheckout}
         />
       </section>

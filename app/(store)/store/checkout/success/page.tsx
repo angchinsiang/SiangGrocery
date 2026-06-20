@@ -1,5 +1,6 @@
 import Link from "next/link";
 import stripe from "@/lib/stripe";
+import RedirectHandler from "./RedirectHandler";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -152,22 +153,17 @@ export default async function CheckoutSuccessPage({
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/store"
-            className="inline-flex items-center justify-center px-6 py-3 bg-[#f8b878] hover:bg-[#f0a860] text-gray-900 font-semibold rounded-xl transition-colors shadow-sm"
-          >
-            Continue Shopping
-          </Link>
+          {paymentStatus === "succeeded" && (
+            <p className="text-sm text-gray-500 animate-pulse">Redirecting to your orders...</p>
+          )}
           {paymentStatus === "failed" && (
-            <Link
-              href="/store/checkout"
-              className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
-            >
-              Try Again
-            </Link>
+            <p className="text-sm text-gray-500 animate-pulse">Redirecting to cart...</p>
           )}
         </div>
       </div>
+      {(paymentStatus === "succeeded" || paymentStatus === "failed") && (
+        <RedirectHandler status={paymentStatus} />
+      )}
     </main>
   );
 }

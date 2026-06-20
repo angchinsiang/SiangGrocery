@@ -41,7 +41,7 @@ const OrderItem = ({
                 </span>
               </p>
             </div>
-            <div>x{quantity}</div>
+            <div className="text-base">x{quantity}</div>
           </div>
         </div>
       </div>

@@ -86,6 +86,7 @@ export async function createPaymentIntent(
   isCart: boolean,
   shippingCouponId?: string,
   discountCouponId?: string,
+  deliveryAddress?: string,
 ) {
   let userId: string;
   try {
@@ -206,7 +207,7 @@ export async function createPaymentIntent(
 
     // Create a PaymentIntent with the exact calculated amount
     // Auto-cancel after 5 minutes (300 seconds)
-    const PAYMENT_TTL_SECONDS = 300;
+    const PAYMENT_TTL_SECONDS = 60 * 60 * 24 * 7;
     const expiresAt = Math.floor(Date.now() / 1000) + PAYMENT_TTL_SECONDS;
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -225,7 +226,7 @@ export async function createPaymentIntent(
     // Store checkout data in Redis for the webhook (5 min TTL matching payment window)
     await redis.set(
       `checkout:${paymentIntent.id}`,
-      JSON.stringify({ skus, isCart }),
+      JSON.stringify({ skus, isCart, deliveryAddress }),
       { ex: PAYMENT_TTL_SECONDS },
     );
 

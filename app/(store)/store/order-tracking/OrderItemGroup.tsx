@@ -11,22 +11,25 @@ type statusTypes =
   | "Delivered"
   | "DeliveredDetails"
   | "ReturnCancel";
-const statusList: Record<statusTypes, React.FC[]> = {
-  Pending: [],
-  Processing: [],
-  Delivered: [OrderDetailsButton, BuyAgainButton, ReviewButton],
-  DeliveredDetails: [BuyAgainButton, ReviewButton],
-  ReturnCancel: [OrderDetailsButton],
-};
+const statusList: Record<statusTypes, React.FC<{ orderTicketId?: string }>[]> =
+  {
+    Pending: [OrderDetailsButton],
+    Processing: [OrderDetailsButton],
+    Delivered: [OrderDetailsButton, BuyAgainButton, ReviewButton],
+    DeliveredDetails: [BuyAgainButton, ReviewButton],
+    ReturnCancel: [OrderDetailsButton],
+  };
 
 const OrderItemGroup = ({
   children,
   totalAmount,
   status,
+  orderTicketId,
 }: {
   children: React.ReactNode;
   totalAmount: number;
   status: statusTypes;
+  orderTicketId?: string;
 }) => {
   return (
     <div className="flex flex-col gap-5 py-5 ring-2 ring-gray-200 rounded-[24px]">
@@ -35,7 +38,10 @@ const OrderItemGroup = ({
         <p className="text-xl font-bold">Total: ${totalAmount.toFixed(2)}</p>
         <div className="flex gap-3 ">
           {statusList[status]?.map((ButtonComponent) => (
-            <ButtonComponent key={ButtonComponent.name} />
+            <ButtonComponent
+              key={ButtonComponent.name}
+              orderTicketId={orderTicketId}
+            />
           ))}
         </div>
       </div>
