@@ -26,10 +26,12 @@ model User {
   wishlists            Wishlist[]
   order_tickets        Order_Ticket[]
   comments             Comment[]
-  addresses            Address[]
+  addresses            Address[]              @relation("UserAddresses")
   commentLikes         CommentLike[]
   userCoupons          User_Coupon[]
   couponUsageHistories Coupon_Usage_History[]
+  defaultAddress       Address?               @relation("DefaultAddress", fields: [defaultAddressId], references: [id])
+  defaultAddressId     String?                @unique
 }
 
 model Address {
@@ -39,12 +41,12 @@ model Address {
   state      String
   postalCode String
   country    Country  @default(Australia)
-  isDefault  Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  user_id String
-  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    String
+  user       User   @relation("UserAddresses", fields: [user_id], references: [id], onDelete: Cascade)
+  defaultFor User?  @relation("DefaultAddress")
 }
 
 model Cart {

@@ -21,7 +21,7 @@ const NavBar = async () => {
   const image = sessionUser?.imageUrl || "https://github.com/shadcn.png";
 
   return (
-    <nav className="w-full p-3 ring-2 fixed z-[9999] bg-white">
+    <nav className="w-full p-3 fixed z-[9999] dark:bg-background bg-white">
       <div className="flex justify-around items-center">
         <Link href="/store" className="font-bold text-2xl">
           Siang Grocery
@@ -31,7 +31,7 @@ const NavBar = async () => {
           <Link href="/store/new-arrivals">New Arrivals</Link>
           <Link href="/store/recently-popular">Recently Popular</Link>
           <Link href="/store/order-tracking">Order Tracking</Link>
-        </div>  
+        </div>
         <SearchBar />
         <div className="flex gap-3 items-center">
           <Link href="/store/cart">
@@ -58,12 +58,24 @@ const NavBar = async () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel className="dark:text-white font-bold text-sm text-black pt-3">
+                    My Account
+                  </DropdownMenuLabel>
                   <DropdownMenuItem>
-                    <Link href="/store/profile">Profile</Link>
+                    <Link
+                      className="dark:text-gray-400 dark:hover:text-white"
+                      href="/store/profile"
+                    >
+                      Profile
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link href="/store/wishlist">Wishlist</Link>
+                    <Link
+                      className="dark:text-gray-400 dark:hover:text-white"
+                      href="/store/wishlist"
+                    >
+                      Wishlist
+                    </Link>
                   </DropdownMenuItem>
                   <SignOutButton>
                     <DropdownMenuItem className="text-red-500">

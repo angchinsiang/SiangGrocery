@@ -9,6 +9,7 @@ import NavBar from "./NavBar";
 import Footer from "@/components/server/Footer";
 import QueryClientProvider from "./QueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
 
 export const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -45,18 +46,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={inter.className} suppressHydrationWarning>
       <body
         className={`${itim.variable} ${inter.variable} ${hennyPenny.variable} antialiased`}
       >
         <SpeedInsights />
-        <QueryClientProvider>
-          <ClerkProvider>
-            <NavBar />
-            <main className="pt-[4rem]">{children}</main>
-            <Footer />
-          </ClerkProvider>
-        </QueryClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+        >
+          <QueryClientProvider>
+            <ClerkProvider>
+              <NavBar />
+              <main className="pt-[4rem]">{children}</main>
+              <Footer />
+            </ClerkProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
         <Toaster />
         <SpeedInsights />
       </body>

@@ -36,3 +36,19 @@ export const grocerySchema = z.object({
 });
 
 export type GroceryFormData = z.infer<typeof grocerySchema>;
+
+export const addressSchema = z.object({
+  street: z
+    .string()
+    .min(1, "Street is required")
+    .max(100, "Street is too long"),
+  city: z.string().min(1, "City is required").max(100, "City is too long"),
+  state: z.string().min(1, "State is required").max(100, "State is too long"),
+  postalCode: z
+    .string()
+    .length(5, "Postal Code must be 5 digits")
+    .regex(/^[0-9]+$/, "Postal Code must be numbers only"),
+  country: z.enum(Country),
+});
+
+export type AddressFormData = z.infer<typeof addressSchema>;
